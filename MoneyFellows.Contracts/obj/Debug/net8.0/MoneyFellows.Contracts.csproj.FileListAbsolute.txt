@@ -1,0 +1,11 @@
+C:\Drive_D\Work\Projects\FlowTransact\MoneyFellows.Contracts\bin\Debug\net8.0\MoneyFellows.Contracts.deps.json
+C:\Drive_D\Work\Projects\FlowTransact\MoneyFellows.Contracts\bin\Debug\net8.0\MoneyFellows.Contracts.dll
+C:\Drive_D\Work\Projects\FlowTransact\MoneyFellows.Contracts\bin\Debug\net8.0\MoneyFellows.Contracts.pdb
+C:\Drive_D\Work\Projects\FlowTransact\MoneyFellows.Contracts\obj\Debug\net8.0\MoneyFellows.Contracts.GeneratedMSBuildEditorConfig.editorconfig
+C:\Drive_D\Work\Projects\FlowTransact\MoneyFellows.Contracts\obj\Debug\net8.0\MoneyFellows.Contracts.AssemblyInfoInputs.cache
+C:\Drive_D\Work\Projects\FlowTransact\MoneyFellows.Contracts\obj\Debug\net8.0\MoneyFellows.Contracts.AssemblyInfo.cs
+C:\Drive_D\Work\Projects\FlowTransact\MoneyFellows.Contracts\obj\Debug\net8.0\MoneyFellows.Contracts.csproj.CoreCompileInputs.cache
+C:\Drive_D\Work\Projects\FlowTransact\MoneyFellows.Contracts\obj\Debug\net8.0\MoneyFellows.Contracts.dll
+C:\Drive_D\Work\Projects\FlowTransact\MoneyFellows.Contracts\obj\Debug\net8.0\refint\MoneyFellows.Contracts.dll
+C:\Drive_D\Work\Projects\FlowTransact\MoneyFellows.Contracts\obj\Debug\net8.0\MoneyFellows.Contracts.pdb
+C:\Drive_D\Work\Projects\FlowTransact\MoneyFellows.Contracts\obj\Debug\net8.0\ref\MoneyFellows.Contracts.dll
