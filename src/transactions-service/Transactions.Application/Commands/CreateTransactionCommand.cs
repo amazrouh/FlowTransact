@@ -1,3 +1,5 @@
+using MediatR;
+
 namespace Transactions.Application.Commands;
 
 public record CreateTransactionCommand(

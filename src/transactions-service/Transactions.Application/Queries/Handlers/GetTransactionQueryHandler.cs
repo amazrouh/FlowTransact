@@ -1,3 +1,4 @@
+using MediatR;
 using Transactions.Application.Queries;
 using Transactions.Domain.Aggregates;
 

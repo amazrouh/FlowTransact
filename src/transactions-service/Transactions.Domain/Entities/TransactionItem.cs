@@ -9,7 +9,10 @@ public class TransactionItem
     public decimal UnitPrice { get; private set; }
     public decimal TotalPrice => Quantity * UnitPrice;
 
-    private TransactionItem() { } // EF Core constructor
+    private TransactionItem()
+    {
+        ProductName = string.Empty; // EF Core constructor
+    }
 
     public TransactionItem(Guid productId, string productName, int quantity, decimal unitPrice)
     {

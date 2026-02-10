@@ -5,7 +5,6 @@ using Transactions.Application.Commands;
 using Transactions.Application.Queries;
 using Transactions.Domain.Aggregates;
 using Transactions.Domain.Entities;
-using Transactions.Domain.Enums;
 
 namespace Transactions.Api.Controllers;
 
@@ -35,22 +34,27 @@ public class TransactionsController : ControllerBase
     [HttpPost("{id}/items")]
     public async Task<IActionResult> AddItem(Guid id, [FromBody] AddItemRequest request)
     {
-        var query = new GetTransactionQuery(id);
-        var transaction = await _mediator.Send(query);
+        try
+        {
+            var command = new AddTransactionItemCommand(
+                TransactionId: id,
+                ProductId: request.ProductId,
+                ProductName: request.ProductName,
+                Quantity: request.Quantity,
+                UnitPrice: request.UnitPrice);
 
-        if (transaction is null)
+            await _mediator.Send(command);
+            return Ok();
+        }
+        catch (KeyNotFoundException)
         {
             return NotFound();
         }
-
-        try
-        {
-            transaction.AddItem(request.ProductId, request.ProductName, request.Quantity, request.UnitPrice);
-            // Note: In a real implementation, you'd have a command for adding items
-            // For now, we'll assume the transaction is updated through the repository in the infrastructure
-            return Ok();
-        }
         catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+        catch (ArgumentException ex)
         {
             return BadRequest(new { Error = ex.Message });
         }

@@ -44,6 +44,10 @@ public class Transaction : IHasDomainEvents
 
         var item = new TransactionItem(productId, productName, quantity, unitPrice);
         _items.Add(item);
+
+        // Raise domain event
+        var itemAdded = new TransactionItemAdded(Id, item.Id, productId, productName, quantity, unitPrice);
+        _domainEvents.Add(itemAdded);
     }
 
     public void Submit()
@@ -58,7 +62,7 @@ public class Transaction : IHasDomainEvents
         SubmittedAt = DateTime.UtcNow;
 
         // Add domain event
-        var transactionSubmitted = new TransactionSubmitted(Id, CustomerId, TotalAmount);
+        var transactionSubmitted = new Events.TransactionSubmitted(Id, CustomerId, TotalAmount);
         _domainEvents.Add(transactionSubmitted);
     }
 

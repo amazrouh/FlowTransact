@@ -53,6 +53,8 @@ public class TransactionsDbContext : DbContext
 
         foreach (var entity in entities)
         {
+            if (entity is null) continue;
+
             var events = entity.DomainEvents.ToList();
             entity.ClearDomainEvents();
 

@@ -1,3 +1,4 @@
+using MediatR;
 using Transactions.Application.Commands;
 using Transactions.Domain.Aggregates;
 
