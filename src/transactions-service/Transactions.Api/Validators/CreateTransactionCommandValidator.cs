@@ -1,0 +1,13 @@
+using FluentValidation;
+using Transactions.Application.Commands;
+
+namespace Transactions.Api.Validators;
+
+public class CreateTransactionCommandValidator : AbstractValidator<CreateTransactionCommand>
+{
+    public CreateTransactionCommandValidator()
+    {
+        RuleFor(x => x.CustomerId)
+            .NotEmpty().WithMessage("CustomerId is required");
+    }
+}

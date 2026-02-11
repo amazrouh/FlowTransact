@@ -1,38 +1,38 @@
 using MassTransit;
 using Transactions.Application;
-using Transactions.Domain;
+using Transactions.Domain.Aggregates;
 using Transactions.Infrastructure.Persistence;
 
 namespace Transactions.Infrastructure.Repositories;
 
-public class Repository<T> : IRepository<T> where T : class, IHasDomainEvents
+public class TransactionRepository : ITransactionRepository
 {
     private readonly TransactionsDbContext _context;
     private readonly IPublishEndpoint _publishEndpoint;
 
-    public Repository(TransactionsDbContext context, IPublishEndpoint publishEndpoint)
+    public TransactionRepository(TransactionsDbContext context, IPublishEndpoint publishEndpoint)
     {
         _context = context;
         _publishEndpoint = publishEndpoint;
     }
 
-    public async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Transaction?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Set<T>().FindAsync(new object[] { id }, cancellationToken);
+        return await _context.Transactions.FindAsync(new object[] { id }, cancellationToken);
     }
 
-    public async Task AddAsync(T entity, CancellationToken cancellationToken = default)
+    public async Task AddAsync(Transaction transaction, CancellationToken cancellationToken = default)
     {
-        await _context.Set<T>().AddAsync(entity, cancellationToken);
+        await _context.Transactions.AddAsync(transaction, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
 
         // Publish domain events after saving
         await _context.PublishDomainEventsAsync(_publishEndpoint, cancellationToken);
     }
 
-    public async Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(Transaction transaction, CancellationToken cancellationToken = default)
     {
-        _context.Set<T>().Update(entity);
+        _context.Transactions.Update(transaction);
         await _context.SaveChangesAsync(cancellationToken);
 
         // Publish domain events after saving

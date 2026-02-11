@@ -1,5 +1,6 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using Transactions.Domain.Aggregates;
 using Transactions.Domain.Entities;
 
@@ -26,6 +27,11 @@ public class TransactionsDbContext : DbContext
             entity.Property(t => t.Status).HasConversion<string>();
             entity.Property(t => t.TotalAmount).HasPrecision(18, 2);
 
+            // Configure optimistic concurrency
+            entity.Property(t => t.RowVersion)
+                .IsRowVersion()
+                .HasColumnName("RowVersion");
+
             // Configure owned collection of items
             entity.OwnsMany(t => t.Items, item =>
             {
@@ -44,6 +50,10 @@ public class TransactionsDbContext : DbContext
 
     public async Task PublishDomainEventsAsync(IPublishEndpoint publishEndpoint, CancellationToken cancellationToken = default)
     {
+        // Get correlation ID from current activity or HTTP context
+        var correlationId = Activity.Current?.GetTagItem("correlation.id") as string ??
+                           Guid.NewGuid().ToString("N");
+
         var entities = ChangeTracker
             .Entries()
             .Where(e => e.Entity is Transactions.Domain.IHasDomainEvents)
@@ -60,7 +70,17 @@ public class TransactionsDbContext : DbContext
 
             foreach (var domainEvent in events)
             {
-                await publishEndpoint.Publish(domainEvent, cancellationToken);
+                // Set correlation ID on the domain event if it supports it
+                if (domainEvent is MoneyFellows.Contracts.Events.DomainEvent baseEvent)
+                {
+                    // Create a new event instance with correlation ID
+                    var eventWithCorrelationId = baseEvent with { CorrelationId = correlationId };
+                    await publishEndpoint.Publish(eventWithCorrelationId, cancellationToken);
+                }
+                else
+                {
+                    await publishEndpoint.Publish(domainEvent, cancellationToken);
+                }
             }
         }
     }

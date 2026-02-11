@@ -6,9 +6,9 @@ namespace Transactions.Application.Queries.Handlers;
 
 public class GetTransactionQueryHandler : IRequestHandler<GetTransactionQuery, Transaction?>
 {
-    private readonly IRepository<Transaction> _transactionRepository;
+    private readonly ITransactionRepository _transactionRepository;
 
-    public GetTransactionQueryHandler(IRepository<Transaction> transactionRepository)
+    public GetTransactionQueryHandler(ITransactionRepository transactionRepository)
     {
         _transactionRepository = transactionRepository;
     }

@@ -6,9 +6,9 @@ namespace Transactions.Application.Commands.Handlers;
 
 public class CreateTransactionCommandHandler : IRequestHandler<CreateTransactionCommand, Guid>
 {
-    private readonly IRepository<Transaction> _transactionRepository;
+    private readonly ITransactionRepository _transactionRepository;
 
-    public CreateTransactionCommandHandler(IRepository<Transaction> transactionRepository)
+    public CreateTransactionCommandHandler(ITransactionRepository transactionRepository)
     {
         _transactionRepository = transactionRepository;
     }

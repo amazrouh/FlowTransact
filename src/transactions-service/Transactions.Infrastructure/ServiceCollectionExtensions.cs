@@ -20,7 +20,7 @@ public static class ServiceCollectionExtensions
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
         // Add repositories
-        services.AddScoped<IRepository<Transaction>, Repository<Transaction>>();
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
 
         // Add MassTransit
         services.AddMassTransitConfiguration(configuration);

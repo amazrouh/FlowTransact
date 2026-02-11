@@ -14,6 +14,7 @@ public class Transaction : IHasDomainEvents
     public DateTime CreatedAt { get; private set; }
     public DateTime? SubmittedAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
+    public byte[] RowVersion { get; private set; } // For optimistic concurrency
 
     private readonly List<TransactionItem> _items = new();
     public IReadOnlyCollection<TransactionItem> Items => _items.AsReadOnly();
@@ -29,6 +30,7 @@ public class Transaction : IHasDomainEvents
         CustomerId = customerId;
         Status = TransactionStatus.Draft;
         CreatedAt = DateTime.UtcNow;
+        RowVersion = null!; // Will be set by EF Core
     }
 
     public void AddItem(Guid productId, string productName, int quantity, decimal unitPrice)
@@ -41,6 +43,9 @@ public class Transaction : IHasDomainEvents
 
         if (unitPrice <= 0)
             throw new ArgumentException("Unit price must be positive", nameof(unitPrice));
+
+        if (string.IsNullOrWhiteSpace(productName))
+            throw new ArgumentException("ProductName cannot be empty or whitespace", nameof(productName));
 
         var item = new TransactionItem(productId, productName, quantity, unitPrice);
         _items.Add(item);
@@ -57,6 +62,10 @@ public class Transaction : IHasDomainEvents
 
         if (!_items.Any())
             throw new InvalidOperationException("Cannot submit transaction without items");
+
+        // Validate aggregate invariant: transaction must have positive total amount
+        if (TotalAmount <= 0)
+            throw new InvalidOperationException("Transaction total amount must be positive");
 
         Status = TransactionStatus.Submitted;
         SubmittedAt = DateTime.UtcNow;
