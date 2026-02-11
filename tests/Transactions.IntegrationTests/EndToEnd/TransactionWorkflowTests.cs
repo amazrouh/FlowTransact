@@ -90,4 +90,56 @@ public class TransactionWorkflowTests : IClassFixture<DatabaseFixture>
         retrievedTransaction.Items.ShouldHaveCount(2);
         retrievedTransaction.TotalAmount.ShouldBe(61.97m);
     }
+
+    [Fact]
+    public async Task FailedOperation_ShouldNotLeaveSystemInInconsistentState()
+    {
+        // Arrange - Create a valid transaction
+        var services = new ServiceCollection();
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateTransactionCommand).Assembly));
+        services.AddScoped<Transactions.Application.ITransactionRepository, Transactions.Infrastructure.Repositories.TransactionRepository>();
+        services.AddScoped(_ => _database.CreateContext());
+
+        var serviceProvider = services.BuildServiceProvider();
+        var mediator = serviceProvider.GetRequiredService<IMediator>();
+        var customerId = Guid.NewGuid();
+
+        // Create a valid transaction
+        var createCommand = new CreateTransactionCommand(customerId);
+        var transactionId = await mediator.Send(createCommand);
+
+        var context = serviceProvider.GetRequiredService<Transactions.Infrastructure.Persistence.TransactionsDbContext>();
+        var transaction = await context.Transactions.FindAsync(transactionId);
+        transaction.ShouldNotBeNull();
+        transaction.Status.ShouldBe(Transactions.Domain.Enums.TransactionStatus.Draft);
+
+        // Act - Try to submit transaction with no items (should fail)
+        var invalidSubmitCommand = new SubmitTransactionCommand(transactionId);
+
+        // Assert - Command should fail
+        await Should.ThrowAsync<InvalidOperationException>(
+            () => mediator.Send(invalidSubmitCommand));
+
+        // Verify transaction state was not changed (rollback behavior)
+        await context.Entry(transaction).ReloadAsync();
+        transaction.Status.ShouldBe(Transactions.Domain.Enums.TransactionStatus.Draft);
+        transaction.SubmittedAt.ShouldBeNull();
+
+        // Verify we can still use the transaction
+        var addItemCommand = new AddTransactionItemCommand(
+            transactionId,
+            Guid.NewGuid(),
+            "Recovery Product",
+            1,
+            25.00m);
+
+        await mediator.Send(addItemCommand);
+
+        // Verify transaction is still usable after failed operation
+        var query = new GetTransactionQuery(transactionId);
+        var retrieved = await mediator.Send(query);
+        retrieved.Status.ShouldBe("Draft");
+        retrieved.Items.ShouldHaveSingleItem();
+        retrieved.TotalAmount.ShouldBe(25.00m);
+    }
 }
