@@ -3,11 +3,11 @@
 ## Current Priorities
 
 ### Observability & Monitoring
-- [ ] **Add Seq Logging Sink** - Implement Seq for structured log aggregation and real-time monitoring
+- [x] **Add Seq Logging Sink** - Implement Seq for structured log aggregation and real-time monitoring
   - Install `Serilog.Sinks.Seq` package
   - Configure Seq sink in `appsettings.json`
   - Add Seq container to `docker-compose.yml`
-  - Test log ingestion and querying in Seq UI
+  - Test log ingestion and querying in Seq UI (run `docker-compose up seq` and open http://localhost:5341)
   - Set up basic dashboards for transaction monitoring
 
 ### Completed Features ✅
