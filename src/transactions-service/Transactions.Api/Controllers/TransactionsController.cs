@@ -79,6 +79,25 @@ public class TransactionsController : ControllerBase
         }
     }
 
+    [HttpPost("{id}/cancel")]
+    public async Task<IActionResult> CancelTransaction(Guid id)
+    {
+        try
+        {
+            var command = new CancelTransactionCommand(id);
+            await _mediator.Send(command);
+            return Ok();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetTransaction(Guid id)
     {
