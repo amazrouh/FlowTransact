@@ -1,30 +1,29 @@
-using DotNet.Testcontainers.Containers;
 using MassTransit;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using RabbitMQ.Client;
+using Testcontainers.RabbitMq;
 using Transactions.Application;
-using Transactions.Domain.Aggregates;
 using Transactions.Infrastructure.Messaging;
+using Transactions.Infrastructure.Persistence;
 using Transactions.Infrastructure.Repositories;
 
 namespace Transactions.IntegrationTests.Fixtures;
 
 public class MessagingFixture : IAsyncLifetime
 {
-    private readonly RabbitMqTestcontainer _container;
-    private IServiceProvider _serviceProvider;
-    private ITestHarness _harness;
+    private readonly RabbitMqContainer _container;
+    private IServiceProvider? _serviceProvider;
+    private ITestHarness? _harness;
 
-    public string ConnectionString => _container.ConnectionString;
-    public ITestHarness Harness => _harness;
+    public string ConnectionString => _container.GetConnectionString();
+    public ITestHarness Harness => _harness!;
 
     public MessagingFixture()
     {
-        _container = new RabbitMqTestcontainer()
+        _container = new RabbitMqBuilder("rabbitmq:3-management")
             .WithUsername("guest")
             .WithPassword("guest")
-            .WithCleanUp(true);
+            .Build();
     }
 
     public async Task InitializeAsync()
@@ -38,7 +37,7 @@ public class MessagingFixture : IAsyncLifetime
         {
             x.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host(_container.ConnectionString);
+                cfg.Host(_container.GetConnectionString());
 
                 // Configure transactional outbox
                 cfg.UsePublishFilter(typeof(OutboxPublishFilter<>), context);
@@ -61,14 +60,10 @@ public class MessagingFixture : IAsyncLifetime
         await _harness.Start();
     }
 
-    public async Task DisposeAsync()
-    {
-        await _harness.Stop();
-        await _container.DisposeAsync();
-    }
+    public async Task DisposeAsync() => await _container.DisposeAsync();
 
     public T GetService<T>() where T : notnull
     {
-        return _serviceProvider.GetRequiredService<T>();
+        return _serviceProvider!.GetRequiredService<T>();
     }
 }

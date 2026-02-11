@@ -1,3 +1,4 @@
+using MassTransit;
 using MassTransit.Testing;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +28,7 @@ public class TransactionWorkflowTests : IClassFixture<DatabaseFixture>
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateTransactionCommand).Assembly));
         services.AddScoped<Transactions.Application.ITransactionRepository, Transactions.Infrastructure.Repositories.TransactionRepository>();
         services.AddScoped(_ => _database.CreateContext());
+        services.AddMassTransitTestHarness();
 
         var serviceProvider = services.BuildServiceProvider();
         var mediator = serviceProvider.GetRequiredService<IMediator>();
@@ -67,7 +69,7 @@ public class TransactionWorkflowTests : IClassFixture<DatabaseFixture>
         await context.Entry(transaction).ReloadAsync();
         await context.Entry(transaction).Collection(t => t.Items).LoadAsync();
 
-        transaction.Items.ShouldHaveCount(2);
+        transaction.Items.Count.ShouldBe(2);
         transaction.TotalAmount.ShouldBe(15.99m * 2 + 29.99m); // 61.97
 
         // Act 3: Submit transaction
@@ -87,7 +89,7 @@ public class TransactionWorkflowTests : IClassFixture<DatabaseFixture>
         retrievedTransaction.ShouldNotBeNull();
         retrievedTransaction.Id.ShouldBe(transactionId);
         retrievedTransaction.Status.ShouldBe(Transactions.Domain.Enums.TransactionStatus.Submitted);
-        retrievedTransaction.Items.ShouldHaveCount(2);
+        retrievedTransaction!.Items.Count.ShouldBe(2);
         retrievedTransaction.TotalAmount.ShouldBe(61.97m);
     }
 
@@ -99,6 +101,7 @@ public class TransactionWorkflowTests : IClassFixture<DatabaseFixture>
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateTransactionCommand).Assembly));
         services.AddScoped<Transactions.Application.ITransactionRepository, Transactions.Infrastructure.Repositories.TransactionRepository>();
         services.AddScoped(_ => _database.CreateContext());
+        services.AddMassTransitTestHarness();
 
         var serviceProvider = services.BuildServiceProvider();
         var mediator = serviceProvider.GetRequiredService<IMediator>();
@@ -138,8 +141,8 @@ public class TransactionWorkflowTests : IClassFixture<DatabaseFixture>
         // Verify transaction is still usable after failed operation
         var query = new GetTransactionQuery(transactionId);
         var retrieved = await mediator.Send(query);
-        retrieved.Status.ShouldBe("Draft");
-        retrieved.Items.ShouldHaveSingleItem();
+        retrieved!.Status.ShouldBe(Transactions.Domain.Enums.TransactionStatus.Draft);
+        retrieved.Items.Count.ShouldBe(1);
         retrieved.TotalAmount.ShouldBe(25.00m);
     }
 }

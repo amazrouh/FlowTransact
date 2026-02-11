@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Transactions.Application;
 using Transactions.Domain.Aggregates;
@@ -130,7 +131,7 @@ public class TransactionRepositoryTests : IClassFixture<DatabaseFixture>
             .FirstOrDefaultAsync(t => t.Id == transaction.Id);
 
         savedTransaction.ShouldNotBeNull();
-        savedTransaction.Items.ShouldHaveCount(3);
+        savedTransaction.Items.Count.ShouldBe(3);
         savedTransaction.TotalAmount.ShouldBe(10.00m + 31.00m + 23.97m); // 65.97
 
         var productA = savedTransaction.Items.First(i => i.ProductName == "Product A");

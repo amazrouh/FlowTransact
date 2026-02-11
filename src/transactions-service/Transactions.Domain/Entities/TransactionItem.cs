@@ -3,6 +3,7 @@ namespace Transactions.Domain.Entities;
 public class TransactionItem
 {
     public Guid Id { get; private set; }
+    public Guid TransactionId { get; private set; } // Foreign key to Transaction
     public Guid ProductId { get; private set; }
     public string ProductName { get; private set; }
     public int Quantity { get; private set; }
@@ -14,9 +15,10 @@ public class TransactionItem
         ProductName = string.Empty; // EF Core constructor
     }
 
-    public TransactionItem(Guid productId, string productName, int quantity, decimal unitPrice)
+    public TransactionItem(Guid transactionId, Guid productId, string productName, int quantity, decimal unitPrice)
     {
         Id = Guid.NewGuid();
+        TransactionId = transactionId;
         ProductId = productId;
         ProductName = productName;
         Quantity = quantity;

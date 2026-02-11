@@ -3,6 +3,7 @@ using Serilog;
 using Transactions.Api.Middleware;
 using Transactions.Api.Validators;
 using Transactions.Infrastructure;
+using Transactions.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<AddTransactionItemCommandVa
 
 // Add health checks
 builder.Services.AddHealthChecks();
+
+// Register middleware
+builder.Services.AddTransient<GlobalExceptionHandler>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -56,4 +60,22 @@ app.MapControllers();
 // Add health check endpoint
 app.MapHealthChecks("/health");
 
+// Initialize database
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<TransactionsDbContext>();
+    if (app.Environment.IsDevelopment())
+    {
+        await dbContext.Database.EnsureDeletedAsync();
+        await dbContext.Database.EnsureCreatedAsync();
+    }
+    else
+    {
+        await dbContext.Database.EnsureCreatedAsync();
+    }
+}
+
 app.Run();
+
+// Expose for WebApplicationFactory<Program> in integration tests
+public partial class Program { }

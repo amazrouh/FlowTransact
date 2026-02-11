@@ -15,13 +15,13 @@ public class AddTransactionItemCommandHandler : IRequestHandler<AddTransactionIt
 
     public async Task Handle(AddTransactionItemCommand request, CancellationToken cancellationToken)
     {
-        var transaction = await _transactionRepository.GetByIdAsync(request.TransactionId, cancellationToken);
-        if (transaction is null)
-        {
-            throw new KeyNotFoundException($"Transaction with ID {request.TransactionId} not found");
-        }
-
-        transaction.AddItem(request.ProductId, request.ProductName, request.Quantity, request.UnitPrice);
-        await _transactionRepository.UpdateAsync(transaction, cancellationToken);
+        // Use the repository method that handles the entire operation atomically
+        await _transactionRepository.AddItemToTransactionAsync(
+            request.TransactionId,
+            request.ProductId,
+            request.ProductName,
+            request.Quantity,
+            request.UnitPrice,
+            cancellationToken);
     }
 }
