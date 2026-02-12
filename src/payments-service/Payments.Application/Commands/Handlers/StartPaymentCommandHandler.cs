@@ -44,8 +44,19 @@ public class StartPaymentCommandHandler : IRequestHandler<StartPaymentCommand, S
         if (existing is not null)
             return new StartPaymentResult(existing.Id, true);
 
-        var payment = new Payment(request.TransactionId, request.CustomerId, amount);
-        await _paymentRepository.AddAsync(payment, cancellationToken);
-        return new StartPaymentResult(payment.Id, false);
+        try
+        {
+            var payment = new Payment(request.TransactionId, request.CustomerId, amount);
+            await _paymentRepository.AddAsync(payment, cancellationToken);
+            return new StartPaymentResult(payment.Id, false);
+        }
+        catch (DuplicatePaymentException)
+        {
+            // Race: consumer created payment first. Return existing.
+            existing = await _paymentRepository.GetByTransactionIdAsync(request.TransactionId, cancellationToken);
+            if (existing is not null)
+                return new StartPaymentResult(existing.Id, true);
+            throw;
+        }
     }
 }

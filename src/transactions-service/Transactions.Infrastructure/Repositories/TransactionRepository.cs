@@ -30,9 +30,7 @@ public class TransactionRepository : ITransactionRepository
     public async Task AddAsync(Transaction transaction, CancellationToken cancellationToken = default)
     {
         await _context.Transactions.AddAsync(transaction, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-
-        // Publish domain events (adds to outbox); Bus Outbox requires SaveChanges to persist outbox messages
+        // Publish BEFORE SaveChanges so domain + outbox are committed in one transaction (Bus Outbox)
         await _context.PublishDomainEventsAsync(_publishEndpoint, _sendEndpointProvider, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
@@ -49,9 +47,7 @@ public class TransactionRepository : ITransactionRepository
             }
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
-
-        // Publish domain events (adds to outbox); Bus Outbox requires SaveChanges to persist outbox messages
+        // Publish BEFORE SaveChanges so domain + outbox are committed in one transaction (Bus Outbox)
         await _context.PublishDomainEventsAsync(_publishEndpoint, _sendEndpointProvider, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
@@ -71,9 +67,7 @@ public class TransactionRepository : ITransactionRepository
         var newItem = transaction.Items.Last();
         _context.TransactionItems.Add(newItem);
 
-        await _context.SaveChangesAsync(cancellationToken);
-
-        // Publish domain events (adds to outbox); Bus Outbox requires SaveChanges to persist outbox messages
+        // Publish BEFORE SaveChanges so domain + outbox are committed in one transaction (Bus Outbox)
         await _context.PublishDomainEventsAsync(_publishEndpoint, _sendEndpointProvider, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }

@@ -54,6 +54,7 @@ public class GlobalExceptionHandler : IMiddleware
         KeyNotFoundException => (int)HttpStatusCode.NotFound,
         CustomerMismatchException => (int)HttpStatusCode.Forbidden,
         DbUpdateConcurrencyException => (int)HttpStatusCode.Conflict,
+        HttpRequestException => (int)HttpStatusCode.BadGateway,
         _ => (int)HttpStatusCode.InternalServerError
     };
 

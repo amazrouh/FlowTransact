@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Payments.Application;
+using Payments.Application.Exceptions;
 using Payments.Domain.Aggregates;
 using Payments.Infrastructure.Persistence;
 
@@ -27,8 +29,20 @@ public class PaymentRepository : IPaymentRepository
 
     public async Task AddAsync(Payment payment, CancellationToken cancellationToken = default)
     {
-        await _context.Payments.AddAsync(payment, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.Payments.AddAsync(payment, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex, payment.TransactionId))
+        {
+            throw new DuplicatePaymentException(payment.TransactionId);
+        }
+    }
+
+    private static bool IsUniqueConstraintViolation(DbUpdateException ex, Guid _)
+    {
+        return ex.InnerException is PostgresException pg && pg.SqlState == "23505";
     }
 
     public async Task UpdateAsync(Payment payment, CancellationToken cancellationToken = default)

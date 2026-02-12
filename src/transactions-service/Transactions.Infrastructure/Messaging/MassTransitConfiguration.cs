@@ -45,11 +45,13 @@ public static class MassTransitConfiguration
                 cfg.UseDelayedMessageScheduler();
             });
 
-            // Entity Framework outbox for idempotent consumers (Inbox) and optional Bus Outbox.
-            // UseBusOutbox is NOT enabled - we Send TransactionSubmitted directly to queue.
+            // Entity Framework outbox for idempotent consumers (Inbox) and Bus Outbox.
+            // UseBusOutbox: Send/ Publish go to outbox table; delivery service delivers to RabbitMQ.
+            // TransactionSubmitted is sent via Send - it will go through outbox for transactional guarantee.
             x.AddEntityFrameworkOutbox<Transactions.Infrastructure.Persistence.TransactionsDbContext>(o =>
             {
                 o.UsePostgres();
+                o.UseBusOutbox();
                 o.QueryDelay = TimeSpan.FromSeconds(1);
             });
 
