@@ -1,5 +1,9 @@
+using MassTransit;
+
 namespace MoneyFellows.Contracts.Events;
 
+[MessageUrn("MoneyFellows.Contracts.Events:TransactionSubmitted")]
+[EntityName("transaction-submitted")]
 public record TransactionSubmitted(
     Guid TransactionId,
     Guid CustomerId,

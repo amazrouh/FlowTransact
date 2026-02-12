@@ -1,3 +1,4 @@
+using MoneyFellows.Contracts.Events;
 using Shouldly;
 using Transactions.Domain.Events;
 using Xunit;

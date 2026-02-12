@@ -43,15 +43,16 @@ public class TransactionsDbContext : DbContext
             entity.Ignore(t => t.TotalPrice); // Computed property, not stored in DB
         });
 
-        // Add MassTransit outbox configuration
-        modelBuilder.AddInboxStateEntity();
-        modelBuilder.AddOutboxMessageEntity();
-        modelBuilder.AddOutboxStateEntity();
+        // MassTransit outbox entities - disabled when AddEntityFrameworkOutbox is not used
+        // modelBuilder.AddInboxStateEntity();
+        // modelBuilder.AddOutboxMessageEntity();
+        // modelBuilder.AddOutboxStateEntity();
     }
 
-    public async Task PublishDomainEventsAsync(IPublishEndpoint? publishEndpoint, CancellationToken cancellationToken = default)
+    public async Task PublishDomainEventsAsync(IPublishEndpoint? publishEndpoint, ISendEndpointProvider? sendEndpointProvider, CancellationToken cancellationToken = default)
     {
-        if (publishEndpoint is null)
+        var provider = sendEndpointProvider ?? publishEndpoint as ISendEndpointProvider;
+        if (provider is null)
             return;
 
         // Get correlation ID from current activity or HTTP context
@@ -74,16 +75,19 @@ public class TransactionsDbContext : DbContext
 
             foreach (var domainEvent in events)
             {
-                // Set correlation ID on the domain event if it supports it
-                if (domainEvent is MoneyFellows.Contracts.Events.DomainEvent baseEvent)
+                var eventToSend = domainEvent is MoneyFellows.Contracts.Events.DomainEvent baseEvent
+                    ? baseEvent with { CorrelationId = correlationId }
+                    : domainEvent;
+
+                // TransactionSubmitted: send directly to Payments queue (Publish wasn't reaching consumer)
+                if (eventToSend is MoneyFellows.Contracts.Events.TransactionSubmitted ts)
                 {
-                    // Create a new event instance with correlation ID
-                    var eventWithCorrelationId = baseEvent with { CorrelationId = correlationId };
-                    await publishEndpoint.Publish(eventWithCorrelationId, cancellationToken);
+                    var endpoint = await provider.GetSendEndpoint(new Uri("queue:transaction-submitted"));
+                    await endpoint.Send(ts, cancellationToken);
                 }
-                else
+                else if (publishEndpoint is not null)
                 {
-                    await publishEndpoint.Publish(domainEvent, cancellationToken);
+                    await publishEndpoint.Publish(eventToSend, cancellationToken);
                 }
             }
         }

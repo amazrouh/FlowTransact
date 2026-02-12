@@ -1,8 +1,8 @@
 using MassTransit;
 using MassTransit.Testing;
+using MoneyFellows.Contracts.Events;
 using Shouldly;
 using Transactions.Domain;
-using Transactions.Domain.Events;
 using Transactions.IntegrationTests.Fixtures;
 using Xunit;
 

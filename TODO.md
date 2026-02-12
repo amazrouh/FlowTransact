@@ -27,6 +27,9 @@
 - [x] Optimistic concurrency control
 - [x] Docker Compose setup with PostgreSQL and RabbitMQ
 
+## Investigation (Backlog)
+- [ ] **Isolate cause of MassTransit Publish not reaching Payments consumer** - TransactionSubmitted was published correctly but never consumed; the workaround (Send to `queue:transaction-submitted`) works. Investigate why default pub/sub topology failed: entity name formatter differences, exchange binding, or other MassTransit/RabbitMQ topology nuances between the two services.
+
 ## Future Enhancements (Backlog)
 - [ ] Implement Payments Service (bounded context)
 - [ ] Add retry policies and dead letter queues

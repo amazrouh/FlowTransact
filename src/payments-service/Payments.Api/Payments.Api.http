@@ -1,0 +1,22 @@
+### Start payment (manual) - amount is fetched from Transactions API, customerId validated for fraud protection
+POST http://localhost:5264/api/payments/start
+Content-Type: application/json
+
+{
+  "transactionId": "00000000-0000-0000-0000-000000000001",
+  "customerId": "00000000-0000-0000-0000-000000000002"
+}
+
+### Confirm payment
+POST http://localhost:5264/api/payments/{{paymentId}}/confirm
+
+### Fail payment
+POST http://localhost:5264/api/payments/{{paymentId}}/fail
+Content-Type: application/json
+
+{
+  "reason": "Insufficient funds"
+}
+
+### Get payment
+GET http://localhost:5264/api/payments/{{paymentId}}

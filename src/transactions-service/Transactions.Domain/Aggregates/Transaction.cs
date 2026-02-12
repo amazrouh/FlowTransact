@@ -70,8 +70,8 @@ public class Transaction : IHasDomainEvents
         Status = TransactionStatus.Submitted;
         SubmittedAt = DateTime.UtcNow;
 
-        // Add domain event
-        var transactionSubmitted = new Events.TransactionSubmitted(Id, CustomerId, TotalAmount);
+        // Add domain event (use contract type for cross-service compatibility)
+        var transactionSubmitted = new MoneyFellows.Contracts.Events.TransactionSubmitted(Id, CustomerId, TotalAmount);
         _domainEvents.Add(transactionSubmitted);
     }
 

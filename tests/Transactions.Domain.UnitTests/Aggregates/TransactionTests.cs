@@ -146,7 +146,7 @@ public class TransactionTests
 
         transaction.DomainEvents.Count.ShouldBe(2); // TransactionItemAdded + TransactionSubmitted
         var submittedEvent = transaction.DomainEvents
-            .OfType<Transactions.Domain.Events.TransactionSubmitted>()
+            .OfType<MoneyFellows.Contracts.Events.TransactionSubmitted>()
             .Single();
         submittedEvent.TransactionId.ShouldBe(transaction.Id);
         submittedEvent.CustomerId.ShouldBe(transaction.CustomerId);

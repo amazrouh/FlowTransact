@@ -1,5 +1,8 @@
+using MassTransit;
+
 namespace MoneyFellows.Contracts.Events;
 
+[MessageUrn("MoneyFellows.Contracts.Events:PaymentFailed")]
 public record PaymentFailed(
     Guid PaymentId,
     Guid TransactionId,

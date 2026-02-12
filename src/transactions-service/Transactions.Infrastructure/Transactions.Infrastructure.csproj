@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../../MoneyFellows.Contracts/MoneyFellows.Contracts.csproj" />
     <ProjectReference Include="../Transactions.Application/Transactions.Application.csproj" />
     <ProjectReference Include="../Transactions.Domain/Transactions.Domain.csproj" />
   </ItemGroup>
