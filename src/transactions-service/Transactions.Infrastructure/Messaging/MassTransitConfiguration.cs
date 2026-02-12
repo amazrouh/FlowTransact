@@ -23,13 +23,15 @@ public static class MassTransitConfiguration
             {
                 cfg.Host(configuration.GetConnectionString("RabbitMQ"));
 
-                // Explicitly configure payment event consumers to ensure correct queue binding
+                // Explicitly configure payment event consumers with EF inbox for idempotency
                 cfg.ReceiveEndpoint("payment-confirmed", e =>
                 {
+                    e.UseEntityFrameworkOutbox<Transactions.Infrastructure.Persistence.TransactionsDbContext>(context);
                     e.ConfigureConsumer<PaymentConfirmedConsumer>(context);
                 });
                 cfg.ReceiveEndpoint("payment-failed", e =>
                 {
+                    e.UseEntityFrameworkOutbox<Transactions.Infrastructure.Persistence.TransactionsDbContext>(context);
                     e.ConfigureConsumer<PaymentFailedConsumer>(context);
                 });
 
@@ -43,14 +45,13 @@ public static class MassTransitConfiguration
                 cfg.UseDelayedMessageScheduler();
             });
 
-            // Configure the outbox with PostgreSQL (for PaymentConfirmed/Failed consumers).
-            // Temporarily removed AddEntityFrameworkOutbox - the delivery service was faulting and may
-            // have been interfering with direct publish. Transactions will publish directly to RabbitMQ.
-            // x.AddEntityFrameworkOutbox<Transactions.Infrastructure.Persistence.TransactionsDbContext>(o =>
-            // {
-            //     o.UsePostgres();
-            //     o.QueryDelay = TimeSpan.FromSeconds(1);
-            // });
+            // Entity Framework outbox for idempotent consumers (Inbox) and optional Bus Outbox.
+            // UseBusOutbox is NOT enabled - we Send TransactionSubmitted directly to queue.
+            x.AddEntityFrameworkOutbox<Transactions.Infrastructure.Persistence.TransactionsDbContext>(o =>
+            {
+                o.UsePostgres();
+                o.QueryDelay = TimeSpan.FromSeconds(1);
+            });
 
             // Add delayed message scheduler
             x.AddDelayedMessageScheduler();

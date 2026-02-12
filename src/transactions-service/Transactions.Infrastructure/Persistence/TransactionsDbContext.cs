@@ -43,10 +43,10 @@ public class TransactionsDbContext : DbContext
             entity.Ignore(t => t.TotalPrice); // Computed property, not stored in DB
         });
 
-        // MassTransit outbox entities - disabled when AddEntityFrameworkOutbox is not used
-        // modelBuilder.AddInboxStateEntity();
-        // modelBuilder.AddOutboxMessageEntity();
-        // modelBuilder.AddOutboxStateEntity();
+        // MassTransit inbox/outbox for idempotent consumers (PaymentConfirmed, PaymentFailed)
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
     }
 
     public async Task PublishDomainEventsAsync(IPublishEndpoint? publishEndpoint, ISendEndpointProvider? sendEndpointProvider, CancellationToken cancellationToken = default)

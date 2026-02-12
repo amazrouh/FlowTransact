@@ -1,3 +1,4 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Payments.Domain.Aggregates;
 using Payments.Domain.Enums;
@@ -24,5 +25,10 @@ public class PaymentsDbContext : DbContext
             entity.Property(p => p.Amount).HasPrecision(18, 2);
             entity.HasIndex(p => p.TransactionId).IsUnique();
         });
+
+        // MassTransit inbox/outbox for idempotent consumers (TransactionSubmitted)
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
     }
 }
