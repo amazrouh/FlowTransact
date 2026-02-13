@@ -51,8 +51,7 @@ public class TransactionsDbContext : DbContext
 
     public async Task PublishDomainEventsAsync(IPublishEndpoint? publishEndpoint, ISendEndpointProvider? sendEndpointProvider, CancellationToken cancellationToken = default)
     {
-        var provider = sendEndpointProvider ?? publishEndpoint as ISendEndpointProvider;
-        if (provider is null)
+        if (publishEndpoint is null)
             return;
 
         // Get correlation ID from current activity or HTTP context
@@ -79,16 +78,7 @@ public class TransactionsDbContext : DbContext
                     ? baseEvent with { CorrelationId = correlationId }
                     : domainEvent;
 
-                // TransactionSubmitted: send directly to Payments queue (Publish wasn't reaching consumer)
-                if (eventToSend is MoneyFellows.Contracts.Events.TransactionSubmitted ts)
-                {
-                    var endpoint = await provider.GetSendEndpoint(new Uri("queue:transaction-submitted"));
-                    await endpoint.Send(ts, cancellationToken);
-                }
-                else if (publishEndpoint is not null)
-                {
-                    await publishEndpoint.Publish(eventToSend, cancellationToken);
-                }
+                await publishEndpoint.Publish(eventToSend, cancellationToken);
             }
         }
     }

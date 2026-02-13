@@ -37,17 +37,20 @@ public static class MassTransitConfiguration
 
                 cfg.ConfigureEndpoints(context);
 
-                // Configure retry policies
-                cfg.UseMessageRetry(retry => retry
-                    .Incremental(3, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5)));
+                // Retry policy: 3 retries with incremental delay (1s, 6s, 11s). Skip retry for validation/business exceptions.
+                cfg.UseMessageRetry(retry =>
+                {
+                    retry.Ignore<ArgumentException>();
+                    retry.Ignore<InvalidOperationException>();
+                    retry.Incremental(3, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5));
+                });
 
-                // Configure dead letter queues
+                // After retries exhausted, failed messages go to _error queue (MassTransit default)
                 cfg.UseDelayedMessageScheduler();
             });
 
             // Entity Framework outbox for idempotent consumers (Inbox) and Bus Outbox.
             // UseBusOutbox: Send/ Publish go to outbox table; delivery service delivers to RabbitMQ.
-            // TransactionSubmitted is sent via Send - it will go through outbox for transactional guarantee.
             x.AddEntityFrameworkOutbox<Transactions.Infrastructure.Persistence.TransactionsDbContext>(o =>
             {
                 o.UsePostgres();

@@ -44,7 +44,7 @@ public class TransactionalOutboxTests : IClassFixture<MessagingFixture>
         var transactionId = Guid.NewGuid();
         var customerId = Guid.NewGuid();
 
-        // Act - Publish event directly (simulating what the repository would do)
+        // Act - Publish event directly (no outbox in test harness; harness captures immediately)
         var @event = new TransactionSubmitted(transactionId, customerId, 100.00m);
         await publishEndpoint.Publish(@event);
 

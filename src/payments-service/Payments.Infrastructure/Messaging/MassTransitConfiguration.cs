@@ -33,8 +33,13 @@ public static class MassTransitConfiguration
 
                 cfg.ConfigureEndpoints(context);
 
-                cfg.UseMessageRetry(retry => retry
-                    .Incremental(3, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5)));
+                // Retry policy: 3 retries with incremental delay (1s, 6s, 11s). Skip retry for validation/business exceptions.
+                cfg.UseMessageRetry(retry =>
+                {
+                    retry.Ignore<ArgumentException>();
+                    retry.Ignore<InvalidOperationException>();
+                    retry.Incremental(3, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5));
+                });
             });
         });
 

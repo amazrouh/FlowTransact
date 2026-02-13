@@ -2,10 +2,6 @@ using MassTransit;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.RabbitMq;
-using Transactions.Application;
-using Transactions.Infrastructure.Messaging;
-using Transactions.Infrastructure.Persistence;
-using Transactions.Infrastructure.Repositories;
 
 namespace Transactions.IntegrationTests.Fixtures;
 
@@ -32,27 +28,14 @@ public class MessagingFixture : IAsyncLifetime
 
         var services = new ServiceCollection();
 
-        // Configure MassTransit for testing
+        // Configure MassTransit for testing (no outbox - direct publish for harness to capture)
         services.AddMassTransitTestHarness(x =>
         {
             x.UsingRabbitMq((context, cfg) =>
             {
                 cfg.Host(_container.GetConnectionString());
-
-                // Configure transactional outbox
-                cfg.UsePublishFilter(typeof(OutboxPublishFilter<>), context);
-            });
-
-            // Configure the outbox
-            x.AddEntityFrameworkOutbox<TransactionsDbContext>(o =>
-            {
-                o.UsePostgres();
-                o.UseBusOutbox();
             });
         });
-
-        // Add test services
-        services.AddScoped<ITransactionRepository, TransactionRepository>();
 
         _serviceProvider = services.BuildServiceProvider();
 

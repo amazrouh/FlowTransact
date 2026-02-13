@@ -17,6 +17,7 @@ public class DomainEventTests
         var productName = "Test Product";
         var quantity = 2;
         var unitPrice = 15.99m;
+        var beforeCreation = DateTime.UtcNow;
 
         // Act
         var @event = new TransactionItemAdded(
@@ -26,6 +27,7 @@ public class DomainEventTests
             productName,
             quantity,
             unitPrice);
+        var afterCreation = DateTime.UtcNow;
 
         // Assert
         @event.TransactionId.ShouldBe(transactionId);
@@ -35,7 +37,8 @@ public class DomainEventTests
         @event.Quantity.ShouldBe(quantity);
         @event.UnitPrice.ShouldBe(unitPrice);
         @event.EventId.ShouldNotBe(Guid.Empty);
-        @event.OccurredOn.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-1), DateTime.UtcNow.AddSeconds(1));
+        @event.OccurredOn.ShouldBeGreaterThanOrEqualTo(beforeCreation);
+        @event.OccurredOn.ShouldBeLessThanOrEqualTo(afterCreation.AddMilliseconds(100));
         @event.EventType.ShouldBe("TransactionItemAdded");
     }
 
@@ -46,16 +49,19 @@ public class DomainEventTests
         var transactionId = Guid.NewGuid();
         var customerId = Guid.NewGuid();
         var totalAmount = 99.99m;
+        var beforeCreation = DateTime.UtcNow;
 
         // Act
         var @event = new TransactionSubmitted(transactionId, customerId, totalAmount);
+        var afterCreation = DateTime.UtcNow;
 
         // Assert
         @event.TransactionId.ShouldBe(transactionId);
         @event.CustomerId.ShouldBe(customerId);
         @event.TotalAmount.ShouldBe(totalAmount);
         @event.EventId.ShouldNotBe(Guid.Empty);
-        @event.OccurredOn.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-1), DateTime.UtcNow.AddSeconds(1));
+        @event.OccurredOn.ShouldBeGreaterThanOrEqualTo(beforeCreation);
+        @event.OccurredOn.ShouldBeLessThanOrEqualTo(afterCreation.AddMilliseconds(100));
         @event.EventType.ShouldBe("TransactionSubmitted");
     }
 
