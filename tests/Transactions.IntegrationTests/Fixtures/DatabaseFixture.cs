@@ -5,10 +5,12 @@ namespace Transactions.IntegrationTests.Fixtures;
 
 public class DatabaseFixture
 {
+    private readonly string _databaseName = Guid.NewGuid().ToString();
+
     public TransactionsDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<TransactionsDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .UseInMemoryDatabase(databaseName: _databaseName)
             .Options;
 
         var context = new TransactionsDbContext(options);
