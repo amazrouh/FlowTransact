@@ -1,15 +1,16 @@
 # FlowTransact - Production-Ready Event-Driven Financial Transactions Platform
 
-A **complete enterprise-grade microservice** implementing Clean Architecture, Domain-Driven Design, CQRS, and event-driven patterns for financial transaction processing.
+A **complete enterprise-grade microservice platform** implementing Clean Architecture, Domain-Driven Design, CQRS, and event-driven patterns for financial transaction and payment processing.
 
 ## 🎯 Mission Accomplished
 
-**✅ COMPLETE IMPLEMENTATION:** This project delivers a **production-ready financial transactions microservice** with:
+**✅ COMPLETE IMPLEMENTATION:** This project delivers **production-ready Transactions and Payments microservices** with:
 - **🏗️ Enterprise Architecture** (Clean Architecture + DDD + CQRS)
-- **🔄 Event-Driven Design** (Transactional Outbox + Message Broker)
+- **🔄 Event-Driven Design** (Transactional Outbox + MassTransit/RabbitMQ)
 - **🛡️ Production Reliability** (Concurrency Control + Error Handling + Observability)
-- **🧪 Comprehensive Testing** (44+ Automated Tests + Quality Assurance)
+- **🧪 Comprehensive Testing** (52+ Automated Tests across both services)
 - **📊 Enterprise Observability** (Structured Logging + Health Checks + Correlation IDs)
+- **📖 API Documentation** (Swagger with examples and error response docs)
 
 ---
 
@@ -34,9 +35,11 @@ A **complete enterprise-grade microservice** implementing Clean Architecture, Do
 
 ### **Event-Driven Architecture**
 ```
-Transaction Service → [Transactional Outbox] → RabbitMQ → Payments Service
-     ↓                                                ↓
-[Domain Events] ← [Message Broker] ← [Event Consumers]
+Transactions Service → [Transactional Outbox] → RabbitMQ → Payments Service
+        ↓                                                    ↓
+[TransactionSubmitted]                              [Start Payment]
+        ↑                                                    ↓
+[TransactionCompleted] ← [PaymentConfirmed] ← [Payment Processing]
 ```
 
 ### **Layer Responsibilities**
@@ -72,11 +75,11 @@ Transaction Service → [Transactional Outbox] → RabbitMQ → Payments Service
 - ✅ **Structured Logging** with Serilog and enriched context
 
 ### **🧪 Quality Assurance**
-- ✅ **Unit Tests** (31 tests) covering domain logic and business rules
-- ✅ **Integration Tests** (13+ tests) covering infrastructure and workflows
-- ✅ **API Tests** (5 tests) validating HTTP contracts and responses
+- ✅ **Unit Tests** (46 tests) – Transactions (31) + Payments (15) domain invariants
+- ✅ **Integration Tests** (13 tests) – infrastructure, messaging, workflows
+- ✅ **API Integration Tests** (11 tests) – Transactions (5) + Payments (6) HTTP contracts
 - ✅ **Failure Scenario Tests** ensuring error handling and recovery
-- ✅ **Automated Testing Pipeline** ready for CI/CD integration
+- ✅ **CI/CD Pipeline** – GitHub Actions runs full test suite
 
 ---
 
@@ -84,21 +87,22 @@ Transaction Service → [Transactional Outbox] → RabbitMQ → Payments Service
 
 ### **Testing Pyramid Implementation**
 ```
-API Integration Tests (5 tests) - HTTP layer validation
+API Integration Tests (11 tests) - Transactions + Payments HTTP validation
     ↓
-Integration Tests (8+ tests) - Infrastructure & messaging
+Integration Tests (13 tests) - Infrastructure & messaging
     ↓
-Unit Tests (31 tests) - Domain logic & business rules
+Unit Tests (46 tests) - Domain logic & business rules
 ```
 
 ### **Test Coverage Areas**
 | Test Layer | Tests | Coverage Focus |
 |------------|-------|----------------|
-| **Unit Tests** | 31 | Domain invariants, business rules, domain events |
-| **Repository Integration** | 4 | Data operations, constraints, relationships |
+| **Transactions Unit** | 31 | Transaction aggregate, domain events |
+| **Payments Unit** | 15 | Payment aggregate invariants |
+| **Repository Integration** | 4 | Data operations, constraints |
 | **Messaging Integration** | 2 | Event publishing, transactional outbox |
-| **API Integration** | 5 | HTTP contracts, request/response cycles |
-| **End-to-End Workflows** | 2 | Complete business processes, error recovery |
+| **Transactions API** | 5 | Create, add items, submit, cancel, get |
+| **Payments API** | 6 | Start, confirm, fail, get, idempotency |
 
 ### **Quality Metrics**
 - ✅ **0 Build Errors/Warnings** - Clean compilation
@@ -201,18 +205,19 @@ public record TransactionItemAdded(
 
 ### **Environment Setup**
 ```bash
-# 1. Start infrastructure services
+# 1. Start infrastructure services (PostgreSQL, RabbitMQ)
 docker-compose up -d
 
-# 2. Navigate to API project
+# 2. Run Transactions API (Development: auto-creates schema)
 cd src/transactions-service/Transactions.Api
+dotnet run
 
-# 3. Run database migrations
-dotnet ef database update
-
-# 4. Run the application
+# 3. Run Payments API (separate terminal)
+cd src/payments-service/Payments.Api
 dotnet run
 ```
+
+**Production:** Use `dotnet ef database update` in each service directory before deployment, or run `MigrateAsync` at startup (default for non-Development).
 
 ### **Configuration**
 The application uses **environment-based configuration** with:
@@ -221,16 +226,23 @@ The application uses **environment-based configuration** with:
 - Environment variables for production secrets
 
 ### **Database Schema**
-- **PostgreSQL** with EF Core Code-First migrations
+- **PostgreSQL** with EF Core migrations
+- **Development:** `EnsureDeleted` + `EnsureCreated` for fresh schema on each run
+- **Production:** `MigrateAsync` applies migrations for safe schema evolution
 - **RowVersion** columns for optimistic concurrency
 - **Transactional Outbox** tables for reliable event publishing
-- **Proper indexing** for query performance
 
 ---
 
 ## 📊 API Reference
 
-### **Base URL:** `https://localhost:5001`
+### **Base URLs**
+- **Transactions:** `https://localhost:5001` (or configured port)
+- **Payments:** `https://localhost:5002` (or configured port)
+
+### **API Versioning**
+- Default: `v1` (header `api-version: 1.0` or query `?api-version=1.0`)
+
 ### **Authentication:** None (demo implementation)
 ### **Content-Type:** `application/json`
 
@@ -297,11 +309,24 @@ GET /api/transactions/{transactionId}
 }
 ```
 
+### **Payments API** (base: `/api/payments`)
+| Method | Endpoint | Description |
+|--------|----------|--------------|
+| POST | `/start` | Start payment for a submitted transaction |
+| POST | `/{id}/confirm` | Confirm a payment |
+| POST | `/{id}/fail` | Mark payment as failed with reason |
+| GET | `/{id}` | Get payment by ID |
+
 ### **Health Check**
 ```http
 GET /health
 ```
 **Response:** `200 OK` with health status
+
+### **Swagger / OpenAPI**
+- **Transactions:** `/swagger` (Development)
+- **Payments:** `/swagger` (Development)
+- Request/response examples and error docs (400, 404, 409, 500)
 
 ---
 
@@ -351,41 +376,41 @@ dotnet test --filter Category=API
 FlowTransact/
 ├── 📁 src/
 │   ├── 📁 transactions-service/
-│   │   ├── 🖥️  Transactions.Api/           # Web API Layer
+│   │   ├── 🖥️  Transactions.Api/           # Web API
 │   │   │   ├── Controllers/                 # HTTP Controllers
-│   │   │   ├── DTOs/                       # Data Transfer Objects
-│   │   │   ├── Middleware/                  # Custom Middleware
-│   │   │   ├── Validators/                  # FluentValidation
-│   │   │   └── Program.cs                   # Application Entry Point
-│   │   │
-│   │   ├── 📋 Transactions.Application/    # Application Layer
-│   │   │   ├── Commands/                    # CQRS Commands
-│   │   │   ├── Queries/                     # CQRS Queries
-│   │   │   └── ITransactionRepository.cs    # Repository Interface
-│   │   │
-│   │   ├── 🎯 Transactions.Domain/          # Domain Layer
-│   │   │   ├── Aggregates/                  # Domain Aggregates
-│   │   │   ├── Entities/                    # Domain Entities
-│   │   │   ├── Enums/                       # Domain Enumerations
-│   │   │   └── Events/                      # Domain Events
-│   │   │
-│   │   └── 🔧 Transactions.Infrastructure/  # Infrastructure Layer
-│   │       ├── Persistence/                 # EF Core DbContext
-│   │       ├── Repositories/                # Repository Implementations
-│   │       └── Messaging/                   # MassTransit Configuration
+│   │   │   ├── DTOs/                        # Data Transfer Objects
+│   │   │   ├── Middleware/                  # GlobalExceptionHandler, CorrelationId
+│   │   │   ├── Swagger/                     # Operation & schema filters
+│   │   │   └── Validators/                  # FluentValidation
+│   │   ├── 📋 Transactions.Application/    # Commands, Queries, MediatR
+│   │   ├── 🎯 Transactions.Domain/          # Aggregates, Events
+│   │   └── 🔧 Transactions.Infrastructure/  # EF Core, MassTransit, Migrations
 │   │
-│   └── 📦 MoneyFellows.Contracts/           # Shared Contracts
-│       └── Events/                          # Domain Event Definitions
+│   ├── 📁 payments-service/
+│   │   ├── 🖥️  Payments.Api/               # Web API
+│   │   │   ├── Controllers/                 # HTTP Controllers
+│   │   │   ├── DTOs/                        # Data Transfer Objects
+│   │   │   ├── Middleware/                  # GlobalExceptionHandler, CorrelationId
+│   │   │   ├── Swagger/                     # Operation & schema filters
+│   │   │   └── Validators/                  # FluentValidation
+│   │   ├── 📋 Payments.Application/         # Commands, Queries, MediatR
+│   │   ├── 🎯 Payments.Domain/              # Payment aggregate, invariants
+│   │   └── 🔧 Payments.Infrastructure/      # EF Core, MassTransit, Transaction API client
+│   │
+│   └── 📦 MoneyFellows.Contracts/           # Shared event contracts
 │
 ├── 🧪 tests/
-│   ├── 📋 Transactions.Domain.UnitTests/     # Domain Unit Tests
-│   ├── 🔧 Transactions.IntegrationTests/      # Integration Tests
-│   └── 🌐 Transactions.Api.IntegrationTests/  # API Tests
+│   ├── 📋 Transactions.Domain.UnitTests/     # 31 domain tests
+│   ├── 📋 Payments.Domain.UnitTests/         # 15 domain tests
+│   ├── 🔧 Transactions.IntegrationTests/     # 13 integration tests
+│   ├── 🌐 Transactions.Api.IntegrationTests/ # 5 API tests
+│   └── 🌐 Payments.Api.IntegrationTests/     # 6 API tests
 │
-├── ⚙️ docker-compose.yml                      # Infrastructure Services
-├── 📖 README.md                              # This Documentation
-├── 🎯 DOMAIN.md                              # Domain Model Documentation
-└── 🏗️ FlowTransact.sln                       # Solution File
+├── ⚙️ docker-compose.yml                      # PostgreSQL, RabbitMQ
+├── .github/workflows/ci.yml                    # CI pipeline
+├── 📖 README.md                                # This Documentation
+├── 🎯 DOMAIN.md                                # Domain Model Documentation
+└── 🏗️ FlowTransact.sln                         # Solution File
 ```
 
 ---
@@ -427,11 +452,12 @@ FlowTransact/
 
 ## 🚀 Roadmap & Future Enhancements
 
-### **Phase 1: Payments Service Integration** ✅ *Ready*
-- Consume `TransactionSubmitted` events
-- Implement payment gateway integration
-- Publish `PaymentConfirmed`/`PaymentFailed` events
-- Update transaction states based on payment results
+### **Phase 1: Payments Service Integration** ✅ *Complete*
+- ✅ Consume `TransactionSubmitted` events
+- ✅ Start payment via API or event consumer
+- ✅ Confirm/Fail payment with idempotent handling
+- ✅ Publish `PaymentConfirmed`/`PaymentFailed` events
+- ✅ Transactions service consumes payment events → updates state
 
 ### **Phase 2: Advanced Monitoring** 🔄 *Partially Implemented*
 - ✅ **Correlation IDs** - Request tracing implemented
@@ -461,12 +487,12 @@ FlowTransact/
 
 ## 📈 Quality Metrics
 
-- **🏗️ Architecture:** Clean Architecture + DDD + CQRS implemented
-- **🧪 Testing:** 44+ automated tests across all layers
-- **🚀 Performance:** In-memory database testing foundation
-- **🔒 Security:** Input validation and error handling
-- **📊 Observability:** Structured logging and health checks
-- **🔧 Maintainability:** SOLID principles and clear separation of concerns
+- **🏗️ Architecture:** Clean Architecture + DDD + CQRS for both services
+- **🧪 Testing:** 52+ automated tests (unit, integration, API)
+- **📖 API Docs:** Swagger with examples and error response documentation
+- **🗄️ Migrations:** EF migrations for production; EnsureCreated for development
+- **🔒 Security:** Input validation, FluentValidation, error handling
+- **📊 Observability:** Structured logging, health checks, correlation IDs
 
 ---
 

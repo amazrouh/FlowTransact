@@ -2,6 +2,7 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Payments.Api.DTOs;
+using Payments.Api.Middleware;
 using Payments.Application.Commands;
 using Payments.Application.Queries;
 
@@ -10,6 +11,7 @@ namespace Payments.Api.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/payments")]
+[Produces("application/json")]
 public class PaymentsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -19,7 +21,13 @@ public class PaymentsController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>Starts a payment for a submitted transaction. Returns 201 when created, 200 when payment already existed.</summary>
     [HttpPost("start")]
+    [ProducesResponseType(typeof(StartPaymentResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(StartPaymentResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> StartPayment([FromBody] StartPaymentRequest request)
     {
         var command = new StartPaymentCommand(request.TransactionId, request.CustomerId);
@@ -39,7 +47,13 @@ public class PaymentsController : ControllerBase
             response);
     }
 
+    /// <summary>Confirms a payment.</summary>
     [HttpPost("{id}/confirm")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> ConfirmPayment(Guid id)
     {
         var command = new ConfirmPaymentCommand(id);
@@ -47,7 +61,13 @@ public class PaymentsController : ControllerBase
         return Ok();
     }
 
+    /// <summary>Marks a payment as failed with a reason.</summary>
     [HttpPost("{id}/fail")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> FailPayment(Guid id, [FromBody] FailPaymentRequest request)
     {
         var command = new FailPaymentCommand(id, request.Reason);
@@ -55,7 +75,11 @@ public class PaymentsController : ControllerBase
         return Ok();
     }
 
+    /// <summary>Gets a payment by ID.</summary>
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(PaymentResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetPayment(Guid id)
     {
         var query = new GetPaymentQuery(id);

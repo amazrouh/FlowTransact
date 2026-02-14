@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using Payments.Api.Middleware;
 using Payments.Api.Validators;
 using Payments.Infrastructure;
@@ -43,6 +44,8 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Description = "API for managing payments in the MoneyFellows platform."
     });
+    options.OperationFilter<Payments.Api.Swagger.ErrorResponsesOperationFilter>();
+    options.SchemaFilter<Payments.Api.Swagger.RequestExamplesSchemaFilter>();
 });
 
 var app = builder.Build();
@@ -64,14 +67,23 @@ app.MapHealthChecks("/health");
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsDbContext>();
-    if (app.Environment.IsDevelopment())
+    try
     {
-        await dbContext.Database.EnsureDeletedAsync();
-        await dbContext.Database.EnsureCreatedAsync();
+        if (app.Environment.IsDevelopment())
+        {
+            await dbContext.Database.EnsureDeletedAsync();
+            await dbContext.Database.EnsureCreatedAsync();
+        }
+        else
+        {
+            await dbContext.Database.MigrateAsync();
+        }
     }
-    else
+    catch (Exception ex)
     {
-        await dbContext.Database.EnsureCreatedAsync();
+        var logger = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Program>>();
+        logger.LogError(ex, "Database initialization failed");
+        throw;
     }
 }
 

@@ -7,12 +7,12 @@ using Xunit;
 
 namespace Transactions.Api.IntegrationTests;
 
-public class TransactionsApiTests : IClassFixture<WebApplicationFactory<Program>>
+public class TransactionsApiTests : IClassFixture<TransactionsWebApplicationFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly TransactionsWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
-    public TransactionsApiTests(WebApplicationFactory<Program> factory)
+    public TransactionsApiTests(TransactionsWebApplicationFactory factory)
     {
         _factory = factory;
         _client = _factory.CreateClient();

@@ -65,6 +65,8 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Description = "API for managing financial transactions in the MoneyFellows platform."
     });
+    options.OperationFilter<Transactions.Api.Swagger.ErrorResponsesOperationFilter>();
+    options.SchemaFilter<Transactions.Api.Swagger.RequestExamplesSchemaFilter>();
 });
 
 var app = builder.Build();
@@ -102,7 +104,7 @@ using (var scope = app.Services.CreateScope())
         }
         else
         {
-            await initContext.Database.EnsureCreatedAsync();
+            await initContext.Database.MigrateAsync();
         }
     }
     catch (Exception ex)
