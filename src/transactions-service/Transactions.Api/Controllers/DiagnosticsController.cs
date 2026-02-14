@@ -28,15 +28,16 @@ public class DiagnosticsController : ControllerBase
     {
         try
         {
+            // MassTransit EF creates "OutboxMessage" table (PascalCase) - use quoted identifiers for PostgreSQL
             var totalCount = await _dbContext.Database
-                .SqlQueryRaw<int>("SELECT COUNT(*) FROM outbox_message")
+                .SqlQueryRaw<int>("SELECT COUNT(*) FROM \"OutboxMessage\"")
                 .FirstOrDefaultAsync(cancellationToken);
 
             var recent = await _dbContext.Database
                 .SqlQueryRaw<OutboxMessageRow>(
-                    @"SELECT sequence_number AS ""SequenceNumber"", message_id AS ""MessageId"", message_type AS ""MessageType"", sent_time AS ""SentTime"", destination_address AS ""DestinationAddress""
-                      FROM outbox_message
-                      ORDER BY sequence_number DESC
+                    @"SELECT ""SequenceNumber"" AS ""SequenceNumber"", ""MessageId"" AS ""MessageId"", ""MessageType"" AS ""MessageType"", ""SentTime"" AS ""SentTime"", ""DestinationAddress"" AS ""DestinationAddress""
+                      FROM ""OutboxMessage""
+                      ORDER BY ""SequenceNumber"" DESC
                       LIMIT 10")
                 .ToListAsync(cancellationToken);
 

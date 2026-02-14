@@ -1,4 +1,6 @@
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using Transactions.Api.Middleware;
 using Transactions.Api.Validators;
@@ -63,15 +65,24 @@ app.MapHealthChecks("/health");
 // Initialize database
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<TransactionsDbContext>();
-    if (app.Environment.IsDevelopment())
+    var initContext = scope.ServiceProvider.GetRequiredService<TransactionsDbContext>();
+    try
     {
-        await dbContext.Database.EnsureDeletedAsync();
-        await dbContext.Database.EnsureCreatedAsync();
+        if (app.Environment.IsDevelopment())
+        {
+            await initContext.Database.EnsureDeletedAsync();
+            await initContext.Database.EnsureCreatedAsync();
+        }
+        else
+        {
+            await initContext.Database.EnsureCreatedAsync();
+        }
     }
-    else
+    catch (Exception ex)
     {
-        await dbContext.Database.EnsureCreatedAsync();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Database initialization failed");
+        throw;
     }
 }
 

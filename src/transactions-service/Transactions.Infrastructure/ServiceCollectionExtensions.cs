@@ -15,9 +15,12 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Add DbContext
+        // Add DbContext - domain events are published from repository BEFORE SaveChanges
+        // (interceptor removed to avoid UseBusOutbox deadlock when publishing during SaveChanges)
         services.AddDbContext<TransactionsDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+        {
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+        });
 
         // Add repositories
         services.AddScoped<ITransactionRepository, TransactionRepository>();
