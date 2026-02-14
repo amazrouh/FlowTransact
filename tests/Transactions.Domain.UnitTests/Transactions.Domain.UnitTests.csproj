@@ -24,7 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../MoneyFellows.Contracts/MoneyFellows.Contracts.csproj" />
     <ProjectReference Include="../../src/transactions-service/Transactions.Domain/Transactions.Domain.csproj" />
   </ItemGroup>
 

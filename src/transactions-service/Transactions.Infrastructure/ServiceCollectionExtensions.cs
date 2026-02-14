@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Transactions.Application;
 using Transactions.Domain.Aggregates;
+using Transactions.Infrastructure.Diagnostics;
 using Transactions.Infrastructure.Messaging;
 using Transactions.Infrastructure.Persistence;
 using Transactions.Infrastructure.Repositories;
@@ -24,6 +25,9 @@ public static class ServiceCollectionExtensions
 
         // Add repositories
         services.AddScoped<ITransactionRepository, TransactionRepository>();
+
+        // Add diagnostics (debug endpoints)
+        services.AddScoped<IDiagnosticsService, DiagnosticsService>();
 
         // Add MassTransit
         services.AddMassTransitConfiguration(configuration);

@@ -1,4 +1,3 @@
-using MoneyFellows.Contracts.Events;
 using Shouldly;
 using Transactions.Domain.Events;
 using Xunit;
@@ -20,7 +19,7 @@ public class DomainEventTests
         var beforeCreation = DateTime.UtcNow;
 
         // Act
-        var @event = new TransactionItemAdded(
+        var @event = new TransactionItemAddedDomainEvent(
             transactionId,
             itemId,
             productId,
@@ -52,7 +51,7 @@ public class DomainEventTests
         var beforeCreation = DateTime.UtcNow;
 
         // Act
-        var @event = new TransactionSubmitted(transactionId, customerId, totalAmount);
+        var @event = new TransactionSubmittedDomainEvent(transactionId, customerId, totalAmount);
         var afterCreation = DateTime.UtcNow;
 
         // Assert
@@ -69,8 +68,8 @@ public class DomainEventTests
     public void TransactionItemAdded_ShouldHaveUniqueEventIds()
     {
         // Arrange & Act
-        var event1 = new TransactionItemAdded(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Product A", 1, 10.00m);
-        var event2 = new TransactionItemAdded(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Product B", 1, 15.00m);
+        var event1 = new TransactionItemAddedDomainEvent(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Product A", 1, 10.00m);
+        var event2 = new TransactionItemAddedDomainEvent(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Product B", 1, 15.00m);
 
         // Assert
         event1.EventId.ShouldNotBe(event2.EventId);
@@ -85,7 +84,7 @@ public class DomainEventTests
         var beforeCreation = DateTime.UtcNow;
 
         // Act
-        var @event = new TransactionSubmitted(Guid.NewGuid(), Guid.NewGuid(), 100.00m);
+        var @event = new TransactionSubmittedDomainEvent(Guid.NewGuid(), Guid.NewGuid(), 100.00m);
         var afterCreation = DateTime.UtcNow;
 
         // Assert

@@ -29,8 +29,19 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Trans
 // Add FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<AddTransactionItemCommandValidator>();
 
+// Add validation pipeline behavior - runs validators before handlers
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(Transactions.Api.Behaviors.ValidationBehavior<,>));
+
 // Add health checks
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        builder.Configuration.GetConnectionString("DefaultConnection")!,
+        name: "postgres",
+        tags: new[] { "db", "ready" })
+    .AddRabbitMQ(
+        rabbitConnectionString: builder.Configuration.GetConnectionString("RabbitMQ")!,
+        name: "rabbitmq",
+        tags: new[] { "messaging", "ready" });
 
 // Register middleware
 builder.Services.AddTransient<GlobalExceptionHandler>();

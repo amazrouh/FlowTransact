@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Transactions.Infrastructure.Persistence;
+using Transactions.Application;
 
 namespace Transactions.Api.Controllers;
 
@@ -12,53 +11,26 @@ namespace Transactions.Api.Controllers;
 [Route("api/diagnostics")]
 public class DiagnosticsController : ControllerBase
 {
-    private readonly TransactionsDbContext _dbContext;
+    private readonly IDiagnosticsService _diagnosticsService;
 
-    public DiagnosticsController(TransactionsDbContext dbContext)
+    public DiagnosticsController(IDiagnosticsService diagnosticsService)
     {
-        _dbContext = dbContext;
+        _diagnosticsService = diagnosticsService;
     }
 
     /// <summary>
     /// Returns outbox message stats (pending, recent) for debugging.
-    /// If messages are stuck in outbox_message, they are not being delivered to RabbitMQ.
+    /// If messages are stuck in outbox, they are not being delivered to RabbitMQ.
     /// </summary>
     [HttpGet("outbox")]
     public async Task<IActionResult> GetOutboxStats(CancellationToken cancellationToken)
     {
-        try
+        var result = await _diagnosticsService.GetOutboxStatsAsync(cancellationToken);
+        return Ok(new
         {
-            // MassTransit EF creates "OutboxMessage" table (PascalCase) - use quoted identifiers for PostgreSQL
-            var totalCount = await _dbContext.Database
-                .SqlQueryRaw<int>("SELECT COUNT(*) FROM \"OutboxMessage\"")
-                .FirstOrDefaultAsync(cancellationToken);
-
-            var recent = await _dbContext.Database
-                .SqlQueryRaw<OutboxMessageRow>(
-                    @"SELECT ""SequenceNumber"" AS ""SequenceNumber"", ""MessageId"" AS ""MessageId"", ""MessageType"" AS ""MessageType"", ""SentTime"" AS ""SentTime"", ""DestinationAddress"" AS ""DestinationAddress""
-                      FROM ""OutboxMessage""
-                      ORDER BY ""SequenceNumber"" DESC
-                      LIMIT 10")
-                .ToListAsync(cancellationToken);
-
-            return Ok(new
-            {
-                TotalPending = totalCount,
-                Recent = recent,
-                Hint = totalCount > 0
-                    ? "Messages stuck in outbox. Check MassTransit logs for delivery errors. Try Messaging:UseBusOutbox=false to bypass outbox."
-                    : "Outbox is empty. If TransactionSubmitted still not received, check RabbitMQ exchange bindings."
-            });
-        }
-        catch (Exception ex)
-        {
-            return Ok(new
-            {
-                Error = ex.Message,
-                Hint = "Ensure outbox_message table exists. Check connection string."
-            });
-        }
+            TotalPending = result.TotalPending,
+            Recent = result.Recent,
+            Hint = result.Hint
+        });
     }
-
-    private record OutboxMessageRow(long SequenceNumber, Guid MessageId, string MessageType, DateTime SentTime, string? DestinationAddress);
 }

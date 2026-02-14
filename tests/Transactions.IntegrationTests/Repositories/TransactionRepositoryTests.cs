@@ -23,7 +23,7 @@ public class TransactionRepositoryTests : IClassFixture<DatabaseFixture>
     {
         // Arrange
         var context = _database.CreateContext();
-        var repository = new Transactions.Infrastructure.Repositories.TransactionRepository(context, null, null);
+        var repository = new Transactions.Infrastructure.Repositories.TransactionRepository(context);
         var customerId = Guid.NewGuid();
         var transaction = new Transaction(customerId);
 
@@ -46,7 +46,7 @@ public class TransactionRepositoryTests : IClassFixture<DatabaseFixture>
     {
         // Arrange
         var context = _database.CreateContext();
-        var repository = new Transactions.Infrastructure.Repositories.TransactionRepository(context, null, null);
+        var repository = new Transactions.Infrastructure.Repositories.TransactionRepository(context);
         var customerId = Guid.NewGuid();
         var transaction = new Transaction(customerId);
         await repository.AddAsync(transaction);
@@ -80,7 +80,7 @@ public class TransactionRepositoryTests : IClassFixture<DatabaseFixture>
     {
         // Arrange
         var context = _database.CreateContext();
-        var repository = new Transactions.Infrastructure.Repositories.TransactionRepository(context, null, null);
+        var repository = new Transactions.Infrastructure.Repositories.TransactionRepository(context);
         var customerId = Guid.NewGuid();
         var transaction = new Transaction(customerId);
         await repository.AddAsync(transaction);
@@ -100,7 +100,7 @@ public class TransactionRepositoryTests : IClassFixture<DatabaseFixture>
     {
         // Arrange
         var context = _database.CreateContext();
-        var repository = new Transactions.Infrastructure.Repositories.TransactionRepository(context, null, null);
+        var repository = new Transactions.Infrastructure.Repositories.TransactionRepository(context);
 
         // Act
         var transaction = await repository.GetByIdAsync(Guid.NewGuid());
@@ -114,7 +114,7 @@ public class TransactionRepositoryTests : IClassFixture<DatabaseFixture>
     {
         // Arrange
         var context = _database.CreateContext();
-        var repository = new Transactions.Infrastructure.Repositories.TransactionRepository(context, null, null);
+        var repository = new Transactions.Infrastructure.Repositories.TransactionRepository(context);
         var customerId = Guid.NewGuid();
         var transaction = new Transaction(customerId);
 
@@ -150,7 +150,7 @@ public class TransactionRepositoryTests : IClassFixture<DatabaseFixture>
     {
         // Arrange
         var context = _database.CreateContext();
-        var repository = new Transactions.Infrastructure.Repositories.TransactionRepository(context, null, null);
+        var repository = new Transactions.Infrastructure.Repositories.TransactionRepository(context);
 
         // Test: Transaction with empty customer ID should fail (if using real DB with constraints)
         // Since we're using in-memory, this tests the business rule validation
@@ -169,7 +169,7 @@ public class TransactionRepositoryTests : IClassFixture<DatabaseFixture>
     {
         // Arrange
         var context = _database.CreateContext();
-        var repository = new Transactions.Infrastructure.Repositories.TransactionRepository(context, null, null);
+        var repository = new Transactions.Infrastructure.Repositories.TransactionRepository(context);
 
         var transaction = new Transaction(Guid.NewGuid());
         transaction.AddItem(Guid.NewGuid(), "Valid Product", 2, 15.99m);

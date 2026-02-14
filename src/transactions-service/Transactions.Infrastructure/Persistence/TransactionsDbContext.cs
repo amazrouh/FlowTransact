@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using Transactions.Domain.Aggregates;
 using Transactions.Domain.Entities;
+using Transactions.Domain.Events;
+using MoneyFellows.Contracts.Events;
 
 namespace Transactions.Infrastructure.Persistence;
 
@@ -74,11 +76,21 @@ public class TransactionsDbContext : DbContext
 
             foreach (var domainEvent in events)
             {
-                var eventToSend = domainEvent is MoneyFellows.Contracts.Events.DomainEvent baseEvent
-                    ? baseEvent with { CorrelationId = correlationId }
-                    : domainEvent;
+                object? eventToSend = domainEvent switch
+                {
+                    TransactionSubmittedDomainEvent e => new TransactionSubmitted(e.TransactionId, e.CustomerId, e.TotalAmount)
+                    {
+                        CorrelationId = correlationId
+                    },
+                    TransactionItemAddedDomainEvent e => new TransactionItemAdded(e.TransactionId, e.ItemId, e.ProductId, e.ProductName, e.Quantity, e.UnitPrice)
+                    {
+                        CorrelationId = correlationId
+                    },
+                    _ => null
+                };
 
-                await publishEndpoint.Publish(eventToSend, cancellationToken);
+                if (eventToSend is not null)
+                    await publishEndpoint.Publish(eventToSend, cancellationToken);
             }
         }
     }

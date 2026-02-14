@@ -1,7 +1,8 @@
-using MoneyFellows.Contracts.Events;
+using MassTransit;
 
-namespace Transactions.Domain.Events;
+namespace MoneyFellows.Contracts.Events;
 
+[MessageUrn("MoneyFellows.Contracts.Events:TransactionItemAdded")]
 public record TransactionItemAdded(
     Guid TransactionId,
     Guid ItemId,

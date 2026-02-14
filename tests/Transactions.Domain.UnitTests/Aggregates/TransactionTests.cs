@@ -62,8 +62,8 @@ public class TransactionTests
 
         transaction.DomainEvents.ShouldHaveSingleItem();
         var domainEvent = transaction.DomainEvents.Single();
-        domainEvent.ShouldBeOfType<TransactionItemAdded>();
-        var itemAddedEvent = (TransactionItemAdded)domainEvent;
+        domainEvent.ShouldBeOfType<TransactionItemAddedDomainEvent>();
+        var itemAddedEvent = (TransactionItemAddedDomainEvent)domainEvent;
         itemAddedEvent.TransactionId.ShouldBe(transaction.Id);
         itemAddedEvent.ItemId.ShouldBe(item.Id);
         itemAddedEvent.ProductId.ShouldBe(productId);
@@ -146,7 +146,7 @@ public class TransactionTests
 
         transaction.DomainEvents.Count.ShouldBe(2); // TransactionItemAdded + TransactionSubmitted
         var submittedEvent = transaction.DomainEvents
-            .OfType<MoneyFellows.Contracts.Events.TransactionSubmitted>()
+            .OfType<TransactionSubmittedDomainEvent>()
             .Single();
         submittedEvent.TransactionId.ShouldBe(transaction.Id);
         submittedEvent.CustomerId.ShouldBe(transaction.CustomerId);

@@ -1,4 +1,3 @@
-using MoneyFellows.Contracts.Events;
 using Transactions.Domain.Entities;
 using Transactions.Domain.Enums;
 using Transactions.Domain.Events;
@@ -51,7 +50,7 @@ public class Transaction : IHasDomainEvents
         _items.Add(item);
 
         // Raise domain event
-        var itemAdded = new TransactionItemAdded(Id, item.Id, productId, productName, quantity, unitPrice);
+        var itemAdded = new TransactionItemAddedDomainEvent(Id, item.Id, productId, productName, quantity, unitPrice);
         _domainEvents.Add(itemAdded);
     }
 
@@ -70,8 +69,8 @@ public class Transaction : IHasDomainEvents
         Status = TransactionStatus.Submitted;
         SubmittedAt = DateTime.UtcNow;
 
-        // Add domain event (use contract type for cross-service compatibility)
-        var transactionSubmitted = new MoneyFellows.Contracts.Events.TransactionSubmitted(Id, CustomerId, TotalAmount);
+        // Add domain event
+        var transactionSubmitted = new TransactionSubmittedDomainEvent(Id, CustomerId, TotalAmount);
         _domainEvents.Add(transactionSubmitted);
     }
 

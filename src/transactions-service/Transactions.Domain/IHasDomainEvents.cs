@@ -1,4 +1,4 @@
-using MoneyFellows.Contracts.Events;
+using Transactions.Domain.Events;
 
 namespace Transactions.Domain;
 
