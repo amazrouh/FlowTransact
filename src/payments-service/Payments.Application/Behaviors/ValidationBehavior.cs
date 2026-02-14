@@ -1,7 +1,7 @@
 using FluentValidation;
 using MediatR;
 
-namespace Transactions.Api.Behaviors;
+namespace Payments.Application.Behaviors;
 
 public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>

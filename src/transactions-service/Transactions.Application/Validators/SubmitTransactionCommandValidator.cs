@@ -1,11 +1,11 @@
 using FluentValidation;
 using Transactions.Application.Commands;
 
-namespace Transactions.Api.Validators;
+namespace Transactions.Application.Validators;
 
-public class CancelTransactionCommandValidator : AbstractValidator<CancelTransactionCommand>
+public class SubmitTransactionCommandValidator : AbstractValidator<SubmitTransactionCommand>
 {
-    public CancelTransactionCommandValidator()
+    public SubmitTransactionCommandValidator()
     {
         RuleFor(x => x.TransactionId)
             .NotEmpty().WithMessage("TransactionId is required");

@@ -1,7 +1,8 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Payments.Api.Middleware;
-using Payments.Api.Validators;
+using Payments.Application.Behaviors;
+using Payments.Application.Validators;
 using Payments.Infrastructure;
 using Payments.Infrastructure.Persistence;
 using Serilog;
@@ -20,7 +21,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Payments.Application.Commands.StartPaymentCommand).Assembly));
 
 builder.Services.AddValidatorsFromAssemblyContaining<StartPaymentCommandValidator>();
-builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(Payments.Api.Behaviors.ValidationBehavior<,>));
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 builder.Services.AddApiVersioning(options =>
 {

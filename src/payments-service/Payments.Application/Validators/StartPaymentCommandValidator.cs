@@ -1,7 +1,7 @@
 using FluentValidation;
 using Payments.Application.Commands;
 
-namespace Payments.Api.Validators;
+namespace Payments.Application.Validators;
 
 public class StartPaymentCommandValidator : AbstractValidator<StartPaymentCommand>
 {

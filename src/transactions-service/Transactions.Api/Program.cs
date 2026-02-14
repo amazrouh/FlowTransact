@@ -3,7 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Transactions.Api.Middleware;
-using Transactions.Api.Validators;
+using Transactions.Application.Behaviors;
+using Transactions.Application.Validators;
 using Transactions.Infrastructure;
 using Transactions.Infrastructure.Persistence;
 
@@ -26,11 +27,11 @@ builder.Services.AddInfrastructure(builder.Configuration);
 // Application layer
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Transactions.Application.Commands.CreateTransactionCommand).Assembly));
 
-// Add FluentValidation
+// Add FluentValidation (validators in Application layer)
 builder.Services.AddValidatorsFromAssemblyContaining<AddTransactionItemCommandValidator>();
 
 // Add validation pipeline behavior - runs validators before handlers
-builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(Transactions.Api.Behaviors.ValidationBehavior<,>));
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 // Add health checks
 builder.Services.AddHealthChecks()
