@@ -1,4 +1,6 @@
+using FluentValidation;
 using Payments.Api.Middleware;
+using Payments.Api.Validators;
 using Payments.Infrastructure;
 using Payments.Infrastructure.Persistence;
 using Serilog;
@@ -15,11 +17,33 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Payments.Application.Commands.StartPaymentCommand).Assembly));
+
+builder.Services.AddValidatorsFromAssemblyContaining<StartPaymentCommandValidator>();
+builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(Payments.Api.Behaviors.ValidationBehavior<,>));
+
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+})
+.AddMvc()
+.AddApiExplorer(options => options.GroupNameFormat = "'v'VVV");
+
+builder.Services.AddAuthorization();
 builder.Services.AddHealthChecks();
 builder.Services.AddTransient<GlobalExceptionHandler>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "FlowTransact Payments API",
+        Version = "v1",
+        Description = "API for managing payments in the MoneyFellows platform."
+    });
+});
 
 var app = builder.Build();
 
@@ -29,7 +53,7 @@ app.UseMiddleware<GlobalExceptionHandler>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "Payments API v1"));
 }
 
 app.UseHttpsRedirection();

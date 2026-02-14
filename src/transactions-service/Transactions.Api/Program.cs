@@ -46,10 +46,26 @@ builder.Services.AddHealthChecks()
 // Register middleware
 builder.Services.AddTransient<GlobalExceptionHandler>();
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+})
+.AddMvc()
+.AddApiExplorer(options => options.GroupNameFormat = "'v'VVV");
+
+builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "FlowTransact Transactions API",
+        Version = "v1",
+        Description = "API for managing financial transactions in the MoneyFellows platform."
+    });
+});
 
 var app = builder.Build();
 
@@ -61,7 +77,7 @@ app.UseMiddleware<GlobalExceptionHandler>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "Transactions API v1"));
 }
 
 app.UseHttpsRedirection();

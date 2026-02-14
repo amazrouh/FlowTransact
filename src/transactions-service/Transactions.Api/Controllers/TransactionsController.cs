@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Transactions.Api.DTOs;
@@ -7,6 +8,7 @@ using Transactions.Application.Queries;
 namespace Transactions.Api.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
 [Route("api/transactions")]
 public class TransactionsController : ControllerBase
 {

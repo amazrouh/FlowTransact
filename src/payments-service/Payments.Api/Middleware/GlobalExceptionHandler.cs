@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Payments.Application.Exceptions;
 using System.Net;
@@ -34,7 +35,8 @@ public class GlobalExceptionHandler : IMiddleware
             StatusCode = statusCode,
             Message = GetErrorMessage(exception),
             Path = context.Request.Path,
-            Timestamp = DateTime.UtcNow
+            Timestamp = DateTime.UtcNow,
+            Errors = GetValidationErrors(exception)
         };
 
         var correlationId = context.Items["CorrelationId"] as string ?? "unknown";
@@ -49,6 +51,7 @@ public class GlobalExceptionHandler : IMiddleware
 
     private static int GetStatusCode(Exception exception) => exception switch
     {
+        ValidationException => (int)HttpStatusCode.BadRequest,
         ArgumentException => (int)HttpStatusCode.BadRequest,
         InvalidOperationException => (int)HttpStatusCode.BadRequest,
         KeyNotFoundException => (int)HttpStatusCode.NotFound,
@@ -60,9 +63,21 @@ public class GlobalExceptionHandler : IMiddleware
 
     private static string GetErrorMessage(Exception exception) => exception switch
     {
+        ValidationException => "One or more validation errors occurred.",
         DbUpdateConcurrencyException => "The resource was modified by another process. Please refresh and try again.",
         _ => exception.Message
     };
+
+    private static Dictionary<string, string[]>? GetValidationErrors(Exception exception)
+    {
+        if (exception is ValidationException validationException)
+        {
+            return validationException.Errors
+                .GroupBy(e => e.PropertyName)
+                .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+        }
+        return null;
+    }
 }
 
 public class ErrorResponse
@@ -71,4 +86,5 @@ public class ErrorResponse
     public string Message { get; set; } = string.Empty;
     public string Path { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
+    public Dictionary<string, string[]>? Errors { get; set; }
 }

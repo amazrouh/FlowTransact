@@ -33,11 +33,19 @@
 ## Future Enhancements (Backlog)
 - [x] Implement Payments Service (bounded context)
 - [x] **Retry policies and dead letter queues** - Incremental retry (3 attempts, 1s/6s/11s); Ignore ArgumentException/InvalidOperationException (no retry for validation errors); failed messages go to `_error` queue (MassTransit default)
-- [ ] Implement idempotent event consumers
-- [ ] Add API versioning
-- [ ] Add rate limiting and security headers
-- [ ] Add OpenAPI/Swagger documentation
+- [x] **Implement idempotent event consumers** - MassTransit EF Inbox (InboxState) on all consumer endpoints
+- [x] **Add API versioning** - Asp.Versioning.Mvc with v1.0 default; query string/header versioning
+- [x] **Add OpenAPI/Swagger documentation** - SwaggerDoc with title, version, description for both APIs
+- [x] **Add CI/CD pipeline configuration** - GitHub Actions workflow (.github/workflows/ci.yml) for build and test
+- [x] **Payments Service Parity with Transactions Service** - Apply same improvements as Transactions service:
+  - PaymentDto: GetPaymentQuery returns PaymentDto? instead of Payment?; controller uses DTOs
+  - Validation pipeline: Add ValidationBehavior, validators for StartPaymentCommand, ConfirmPaymentCommand, FailPaymentCommand
+  - GlobalExceptionHandler: Handle ValidationException with structured Errors (like Transactions)
+  - Controller simplification: Remove redundant try/catch; rely on GlobalExceptionHandler (ensure CustomerMismatchException is handled)
+
+## Skipped (Deferred – not implementing now)
+- [ ] Add rate limiting
+- [ ] Add security headers
+- [ ] Add performance benchmarks and load testing
 - [ ] Add metrics collection (Prometheus/Grafana)
 - [ ] Add distributed tracing (OpenTelemetry)
-- [ ] Add CI/CD pipeline configuration
-- [ ] Add performance benchmarks and load testing
