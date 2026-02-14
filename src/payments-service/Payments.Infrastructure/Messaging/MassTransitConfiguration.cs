@@ -1,6 +1,7 @@
 using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MoneyFellows.Contracts.Events;
 using Payments.Infrastructure.Consumers;
 
 namespace Payments.Infrastructure.Messaging;
@@ -28,6 +29,8 @@ public static class MassTransitConfiguration
                 cfg.ReceiveEndpoint("transaction-submitted", e =>
                 {
                     e.UseEntityFrameworkOutbox<Payments.Infrastructure.Persistence.PaymentsDbContext>(context);
+                    // Explicit bind: Publish sends to message-type exchange (single source of truth in contract).
+                    e.Bind(TransactionSubmittedConstants.MessageUrn);
                     e.ConfigureConsumer<TransactionSubmittedConsumer>(context);
                 });
 

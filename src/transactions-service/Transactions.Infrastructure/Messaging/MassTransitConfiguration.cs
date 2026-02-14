@@ -51,10 +51,13 @@ public static class MassTransitConfiguration
 
             // Entity Framework outbox for idempotent consumers (Inbox) and Bus Outbox.
             // UseBusOutbox: Send/ Publish go to outbox table; delivery service delivers to RabbitMQ.
+            // Set Messaging:UseBusOutbox=false to debug Publish issues (bypasses outbox, publishes directly).
+            var useBusOutbox = !string.Equals(configuration["Messaging:UseBusOutbox"], "false", StringComparison.OrdinalIgnoreCase);
             x.AddEntityFrameworkOutbox<Transactions.Infrastructure.Persistence.TransactionsDbContext>(o =>
             {
                 o.UsePostgres();
-                o.UseBusOutbox();
+                if (useBusOutbox)
+                    o.UseBusOutbox();
                 o.QueryDelay = TimeSpan.FromSeconds(1);
             });
 
