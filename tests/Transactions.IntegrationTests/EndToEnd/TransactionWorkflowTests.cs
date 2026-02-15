@@ -24,6 +24,7 @@ public class TransactionWorkflowTests : IClassFixture<DatabaseFixture>
     {
         // Arrange - shared database name ensures all scopes see same InMemory data
         var services = new ServiceCollection();
+        services.AddLogging();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateTransactionCommand).Assembly));
         services.AddScoped<Transactions.Application.ITransactionRepository, Transactions.Infrastructure.Repositories.TransactionRepository>();
         services.AddScoped(_ => _database.CreateContext());
@@ -79,6 +80,7 @@ public class TransactionWorkflowTests : IClassFixture<DatabaseFixture>
     {
         // Arrange
         var services = new ServiceCollection();
+        services.AddLogging();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateTransactionCommand).Assembly));
         services.AddScoped<Transactions.Application.ITransactionRepository, Transactions.Infrastructure.Repositories.TransactionRepository>();
         services.AddScoped(_ => _database.CreateContext());

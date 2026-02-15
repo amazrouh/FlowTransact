@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Serilog.Context;
 
 namespace Payments.Api.Middleware;
 
@@ -21,6 +22,9 @@ public class CorrelationIdMiddleware
         Activity.Current?.SetTag("correlation.id", correlationId);
         context.Items["CorrelationId"] = correlationId;
 
-        await _next(context);
+        using (LogContext.PushProperty("CorrelationId", correlationId))
+        {
+            await _next(context);
+        }
     }
 }

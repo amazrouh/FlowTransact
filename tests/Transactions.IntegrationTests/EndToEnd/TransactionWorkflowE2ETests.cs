@@ -23,6 +23,7 @@ public class TransactionWorkflowE2ETests : IClassFixture<PostgresFixture>
         _postgres = postgres;
 
         var services = new ServiceCollection();
+        services.AddLogging();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateTransactionCommand).Assembly));
         services.AddScoped<Transactions.Application.ITransactionRepository, Transactions.Infrastructure.Repositories.TransactionRepository>();
         services.AddDbContext<Transactions.Infrastructure.Persistence.TransactionsDbContext>(options =>

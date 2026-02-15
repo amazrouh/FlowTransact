@@ -6,6 +6,7 @@ using Payments.Application.Validators;
 using Payments.Infrastructure;
 using Payments.Infrastructure.Persistence;
 using Serilog;
+using Serilog.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +53,7 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseSerilogRequestLogging(); // Logs HTTP requests (method, path, status, duration) to Seq
 app.UseMiddleware<GlobalExceptionHandler>();
 
 if (app.Environment.IsDevelopment())

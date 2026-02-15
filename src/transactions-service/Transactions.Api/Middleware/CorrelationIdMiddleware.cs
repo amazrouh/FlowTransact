@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Serilog.Context;
 
 namespace Transactions.Api.Middleware;
 
@@ -27,7 +28,11 @@ public class CorrelationIdMiddleware
         // Store in HttpContext.Items for easy access
         context.Items["CorrelationId"] = correlationId;
 
-        await _next(context);
+        // Push to Serilog LogContext so all logs in this request include CorrelationId
+        using (LogContext.PushProperty("CorrelationId", correlationId))
+        {
+            await _next(context);
+        }
     }
 }
 

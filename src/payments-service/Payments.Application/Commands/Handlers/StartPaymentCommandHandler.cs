@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Payments.Application.Exceptions;
 using Payments.Domain.Aggregates;
 
@@ -8,11 +9,13 @@ public class StartPaymentCommandHandler : IRequestHandler<StartPaymentCommand, S
 {
     private readonly IPaymentRepository _paymentRepository;
     private readonly ITransactionApiClient _transactionApiClient;
+    private readonly ILogger<StartPaymentCommandHandler> _logger;
 
-    public StartPaymentCommandHandler(IPaymentRepository paymentRepository, ITransactionApiClient transactionApiClient)
+    public StartPaymentCommandHandler(IPaymentRepository paymentRepository, ITransactionApiClient transactionApiClient, ILogger<StartPaymentCommandHandler> logger)
     {
         _paymentRepository = paymentRepository;
         _transactionApiClient = transactionApiClient;
+        _logger = logger;
     }
 
     public async Task<StartPaymentResult> Handle(StartPaymentCommand request, CancellationToken cancellationToken)
@@ -42,12 +45,16 @@ public class StartPaymentCommandHandler : IRequestHandler<StartPaymentCommand, S
         // Idempotency: if payment already exists for this transaction, return existing
         var existing = await _paymentRepository.GetByTransactionIdAsync(request.TransactionId, cancellationToken);
         if (existing is not null)
+        {
+            _logger.LogInformation("Payment already exists for transaction: {TransactionId}, PaymentId: {PaymentId}", request.TransactionId, existing.Id);
             return new StartPaymentResult(existing.Id, true);
+        }
 
         try
         {
             var payment = new Payment(request.TransactionId, request.CustomerId, amount);
             await _paymentRepository.AddAsync(payment, cancellationToken);
+            _logger.LogInformation("Payment started: {PaymentId}, TransactionId: {TransactionId}, Amount: {Amount}", payment.Id, request.TransactionId, amount);
             return new StartPaymentResult(payment.Id, false);
         }
         catch (DuplicatePaymentException)

@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.AspNetCore;
 using Transactions.Api.Middleware;
 using Transactions.Application.Behaviors;
 using Transactions.Application.Validators;
@@ -74,6 +75,7 @@ var app = builder.Build();
 
 // Add middleware in correct order
 app.UseMiddleware<CorrelationIdMiddleware>(); // Must be early for correlation ID
+app.UseSerilogRequestLogging(); // Logs HTTP requests (method, path, status, duration) to Seq
 app.UseMiddleware<GlobalExceptionHandler>();
 
 // Configure the HTTP request pipeline.
