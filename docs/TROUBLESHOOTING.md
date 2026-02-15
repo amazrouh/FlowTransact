@@ -34,3 +34,28 @@ Set `Messaging:UseBusOutbox=false` to bypass the outbox (Publish goes directly t
    ```
 2. **UseBusOutbox=false** if startup hangs (see above)
 3. Run `scripts/inspect-rabbitmq-topology.ps1` to verify bindings
+
+---
+
+## Seq Container Starts Then Stops
+
+### Symptom
+- Seq container starts but exits shortly after
+- `docker ps` shows seq container is not running
+
+### Fix (applied)
+- Added `SEQ_FIRSTRUN_NOAUTHENTICATION: "true"` for dev (no auth on first run)
+- Added `restart: unless-stopped` so the container retries
+
+### If Issues Persist
+1. **Check logs:** `docker logs flowtransact-seq-1` (or your seq container name)
+2. **Clear corrupted volume:** If a previous run left bad state:
+   ```bash
+   docker-compose down
+   docker volume rm flowtransact_seq_data
+   docker-compose up -d seq
+   ```
+3. **Memory:** Seq may need more memory. Run with explicit limit:
+   ```bash
+   docker run -d --name seq -e ACCEPT_EULA=Y -e SEQ_FIRSTRUN_NOAUTHENTICATION=true -p 5341:80 -v flowtransact_seq_data:/data --memory=2g --memory-swap=2g datalust/seq:latest
+   ```

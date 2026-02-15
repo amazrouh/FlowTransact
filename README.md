@@ -46,8 +46,8 @@ Transactions Service → [Transactional Outbox] → RabbitMQ → Payments Servic
 
 | Layer | Technologies | Responsibilities |
 |-------|-------------|------------------|
-| **API** | ASP.NET Core, FluentValidation, Swagger | HTTP handling, request/response, validation |
-| **Application** | MediatR, CQRS | Use cases, command/query orchestration |
+| **API** | ASP.NET Core, Swagger | HTTP handling, request/response, DTO mapping |
+| **Application** | MediatR, CQRS, FluentValidation | Use cases, command/query orchestration, validation |
 | **Domain** | C# Records, Domain Events | Business logic, invariants, aggregates |
 | **Infrastructure** | EF Core, MassTransit, PostgreSQL, RabbitMQ | Data persistence, messaging, external services |
 
@@ -205,7 +205,7 @@ public record TransactionItemAdded(
 
 ### **Environment Setup**
 ```bash
-# 1. Start infrastructure services (PostgreSQL, RabbitMQ)
+# 1. Start infrastructure services (PostgreSQL, RabbitMQ, Seq)
 docker-compose up -d
 
 # 2. Run Transactions API (Development: auto-creates schema)
@@ -237,8 +237,8 @@ The application uses **environment-based configuration** with:
 ## 📊 API Reference
 
 ### **Base URLs**
-- **Transactions:** `https://localhost:5001` (or configured port)
-- **Payments:** `https://localhost:5002` (or configured port)
+- **Transactions:** `http://localhost:5263` (or configured port)
+- **Payments:** `http://localhost:5264` (or configured port)
 
 ### **API Versioning**
 - Default: `v1` (header `api-version: 1.0` or query `?api-version=1.0`)
@@ -347,13 +347,13 @@ dotnet test --collect:"XPlat Code Coverage"
 ### **Test Categories**
 ```bash
 # Unit tests only
-dotnet test --filter Category=Unit
+dotnet test tests/Transactions.Domain.UnitTests tests/Payments.Domain.UnitTests
 
 # Integration tests only
-dotnet test --filter Category=Integration
+dotnet test tests/Transactions.IntegrationTests
 
-# API tests only
-dotnet test --filter Category=API
+# API integration tests only
+dotnet test tests/Transactions.Api.IntegrationTests tests/Payments.Api.IntegrationTests
 ```
 
 ### **Development Workflow**
@@ -380,9 +380,10 @@ FlowTransact/
 │   │   │   ├── Controllers/                 # HTTP Controllers
 │   │   │   ├── DTOs/                        # Data Transfer Objects
 │   │   │   ├── Middleware/                  # GlobalExceptionHandler, CorrelationId
-│   │   │   ├── Swagger/                     # Operation & schema filters
-│   │   │   └── Validators/                  # FluentValidation
+│   │   │   └── Swagger/                     # Operation & schema filters
 │   │   ├── 📋 Transactions.Application/    # Commands, Queries, MediatR
+│   │   │   ├── Behaviors/                  # ValidationBehavior (MediatR pipeline)
+│   │   │   └── Validators/                  # FluentValidation command validators
 │   │   ├── 🎯 Transactions.Domain/          # Aggregates, Events
 │   │   └── 🔧 Transactions.Infrastructure/  # EF Core, MassTransit, Migrations
 │   │
@@ -391,9 +392,10 @@ FlowTransact/
 │   │   │   ├── Controllers/                 # HTTP Controllers
 │   │   │   ├── DTOs/                        # Data Transfer Objects
 │   │   │   ├── Middleware/                  # GlobalExceptionHandler, CorrelationId
-│   │   │   ├── Swagger/                     # Operation & schema filters
-│   │   │   └── Validators/                  # FluentValidation
+│   │   │   └── Swagger/                     # Operation & schema filters
 │   │   ├── 📋 Payments.Application/         # Commands, Queries, MediatR
+│   │   │   ├── Behaviors/                  # ValidationBehavior (MediatR pipeline)
+│   │   │   └── Validators/                  # FluentValidation command validators
 │   │   ├── 🎯 Payments.Domain/              # Payment aggregate, invariants
 │   │   └── 🔧 Payments.Infrastructure/      # EF Core, MassTransit, Transaction API client
 │   │
@@ -406,9 +408,13 @@ FlowTransact/
 │   ├── 🌐 Transactions.Api.IntegrationTests/ # 5 API tests
 │   └── 🌐 Payments.Api.IntegrationTests/     # 6 API tests
 │
-├── ⚙️ docker-compose.yml                      # PostgreSQL, RabbitMQ
+├── ⚙️ docker-compose.yml                      # PostgreSQL, RabbitMQ, Seq
+├── 📁 docker/                                  # init-db.sql for PostgreSQL
+├── 📁 docs/                                    # TROUBLESHOOTING.md
+├── 📁 scripts/                                # test-flow.ps1, inspect-rabbitmq-topology.ps1
 ├── .github/workflows/ci.yml                    # CI pipeline
 ├── 📖 README.md                                # This Documentation
+├── 🏗️ ARCHITECTURE.md                          # Architecture & design decisions
 ├── 🎯 DOMAIN.md                                # Domain Model Documentation
 └── 🏗️ FlowTransact.sln                         # Solution File
 ```
