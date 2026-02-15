@@ -10,7 +10,7 @@
 Publishing domain events from the **SaveChanges interceptor** (during `SaveChanges`) caused a deadlock with MassTransit's bus outbox infrastructure. The outbox expects `Publish` to be called *before* `SaveChanges`, not during it.
 
 ### Fix (applied)
-Domain event publishing was moved from the interceptor to the **repository**, calling `PublishDomainEventsAsync` *before* `SaveChangesAsync`. This matches MassTransit's expected flow: Publish → outbox adds message → SaveChanges commits both.
+Domain event publishing was moved from the interceptor to the **DbContext `SaveChangesAsync` override**, which calls `PublishDomainEventsAsync` *before* `base.SaveChangesAsync()`. This matches MassTransit's expected flow: Publish → outbox adds message → SaveChanges commits both.
 
 ### If Issues Persist
 Set `Messaging:UseBusOutbox=false` to bypass the outbox (Publish goes directly to RabbitMQ). Trade-off: you lose the transactional guarantee.

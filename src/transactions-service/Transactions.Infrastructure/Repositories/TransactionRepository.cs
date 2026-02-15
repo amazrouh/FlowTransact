@@ -1,4 +1,3 @@
-using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Transactions.Application;
 using Transactions.Domain.Aggregates;
@@ -9,12 +8,10 @@ namespace Transactions.Infrastructure.Repositories;
 public class TransactionRepository : ITransactionRepository
 {
     private readonly TransactionsDbContext _context;
-    private readonly IPublishEndpoint? _publishEndpoint;
 
-    public TransactionRepository(TransactionsDbContext context, IPublishEndpoint? publishEndpoint = null)
+    public TransactionRepository(TransactionsDbContext context)
     {
         _context = context;
-        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<Transaction?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -27,9 +24,6 @@ public class TransactionRepository : ITransactionRepository
     public async Task AddAsync(Transaction transaction, CancellationToken cancellationToken = default)
     {
         await _context.Transactions.AddAsync(transaction, cancellationToken);
-        // Publish domain events BEFORE SaveChanges - required for MassTransit UseBusOutbox.
-        // Publishing during SaveChanges interceptor can deadlock with outbox infrastructure.
-        await _context.PublishDomainEventsAsync(_publishEndpoint, null, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
@@ -45,8 +39,6 @@ public class TransactionRepository : ITransactionRepository
             }
         }
 
-        // Publish domain events BEFORE SaveChanges - required for MassTransit UseBusOutbox.
-        await _context.PublishDomainEventsAsync(_publishEndpoint, null, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 }

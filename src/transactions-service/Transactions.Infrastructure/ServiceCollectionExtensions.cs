@@ -1,3 +1,4 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,11 +17,17 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Add DbContext - domain events are published from repository BEFORE SaveChanges
-        // (interceptor removed to avoid UseBusOutbox deadlock when publishing during SaveChanges)
+        // Add DbContext options and register context with factory so IPublishEndpoint is injected.
+        // Domain events are published from SaveChangesAsync override BEFORE base.SaveChanges (required for UseBusOutbox).
         services.AddDbContext<TransactionsDbContext>(options =>
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+        });
+        services.AddScoped<TransactionsDbContext>(sp =>
+        {
+            var options = sp.GetRequiredService<DbContextOptions<TransactionsDbContext>>();
+            var publishEndpoint = sp.GetService<IPublishEndpoint>();
+            return new TransactionsDbContext(options, publishEndpoint);
         });
 
         // Add repositories

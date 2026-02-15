@@ -10,9 +10,12 @@ namespace Transactions.Infrastructure.Persistence;
 
 public class TransactionsDbContext : DbContext
 {
-    public TransactionsDbContext(DbContextOptions<TransactionsDbContext> options)
+    private readonly IPublishEndpoint? _publishEndpoint;
+
+    public TransactionsDbContext(DbContextOptions<TransactionsDbContext> options, IPublishEndpoint? publishEndpoint = null)
         : base(options)
     {
+        _publishEndpoint = publishEndpoint;
     }
 
     public DbSet<Transaction> Transactions => Set<Transaction>();
@@ -51,6 +54,14 @@ public class TransactionsDbContext : DbContext
         modelBuilder.AddInboxStateEntity();
         modelBuilder.AddOutboxMessageEntity();
         modelBuilder.AddOutboxStateEntity();
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        // Publish BEFORE SaveChanges - required for MassTransit UseBusOutbox.
+        // Publishing during SaveChanges interceptor can deadlock with outbox infrastructure.
+        await PublishDomainEventsAsync(_publishEndpoint, null, cancellationToken);
+        return await base.SaveChangesAsync(cancellationToken);
     }
 
     public async Task PublishDomainEventsAsync(IPublishEndpoint? publishEndpoint, ISendEndpointProvider? sendEndpointProvider, CancellationToken cancellationToken = default)
