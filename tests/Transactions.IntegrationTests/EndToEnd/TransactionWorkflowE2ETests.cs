@@ -32,7 +32,7 @@ public class TransactionWorkflowE2ETests : IClassFixture<PostgresFixture>
         _mediator = serviceProvider.GetRequiredService<IMediator>();
     }
 
-    [Fact(Skip = "DbUpdateConcurrencyException when adding items - requires investigation; infrastructure (Testcontainers) ready for CI")]
+    [Fact]
     public async Task CompleteTransactionWorkflow_ShouldWorkEndToEnd()
     {
 

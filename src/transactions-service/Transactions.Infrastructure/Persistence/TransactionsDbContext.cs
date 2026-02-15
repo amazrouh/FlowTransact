@@ -26,6 +26,7 @@ public class TransactionsDbContext : DbContext
         modelBuilder.Entity<Transaction>(entity =>
         {
             entity.HasKey(t => t.Id);
+            entity.Property(t => t.Id).ValueGeneratedNever();
             entity.Property(t => t.Status).HasConversion<string>();
             entity.Ignore(t => t.TotalAmount); // Computed property, not stored in DB
             entity.Ignore(t => t.Version); // Temporarily ignore to avoid concurrency issues
@@ -41,6 +42,7 @@ public class TransactionsDbContext : DbContext
         modelBuilder.Entity<TransactionItem>(entity =>
         {
             entity.HasKey(t => t.Id);
+            entity.Property(t => t.Id).ValueGeneratedNever();
             entity.Property(t => t.UnitPrice).HasPrecision(18, 2);
             entity.Ignore(t => t.TotalPrice); // Computed property, not stored in DB
         });

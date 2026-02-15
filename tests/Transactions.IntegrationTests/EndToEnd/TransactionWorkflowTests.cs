@@ -19,7 +19,7 @@ public class TransactionWorkflowTests : IClassFixture<DatabaseFixture>
         _database = database;
     }
 
-    [Fact(Skip = "EF InMemory DbUpdateConcurrencyException when AddItem runs in new scope - manual/Docker flow works")]
+    [Fact]
     public async Task CompleteTransactionWorkflow_ShouldWorkEndToEnd()
     {
         // Arrange - shared database name ensures all scopes see same InMemory data
@@ -92,7 +92,8 @@ public class TransactionWorkflowTests : IClassFixture<DatabaseFixture>
         var createCommand = new CreateTransactionCommand(customerId);
         var transactionId = await mediator.Send(createCommand);
 
-        var context = serviceProvider.GetRequiredService<Transactions.Infrastructure.Persistence.TransactionsDbContext>();
+        using var scope = serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<Transactions.Infrastructure.Persistence.TransactionsDbContext>();
         var transaction = await context.Transactions.FindAsync(transactionId);
         transaction.ShouldNotBeNull();
         transaction.Status.ShouldBe(Transactions.Domain.Enums.TransactionStatus.Draft);
